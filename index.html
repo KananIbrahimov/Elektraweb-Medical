@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Condensed:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=6">
 </head>
 <body>
 <div class="app" id="app">
@@ -113,6 +113,7 @@
     var title = MAIN[key] || PAGES[key];
     if (key === 'misafirler') {
       toggle('medicalBtn', 'medicalList', true);
+      misafirTab = 'konaklayan';   // ekran her açıldığında Konaklayan
       renderMisafirler();
     } else if (title) {
       toggle('medicalBtn', 'medicalList', true);
@@ -124,7 +125,7 @@
     app.classList.remove('menu-open');
   }
   // Misafirler: üstte Münferit / Konaklayan / Üye sekmeleri
-  var misafirTab = 'munferit';
+  var misafirTab = 'konaklayan';
   var MISAFIR_TABS = [['munferit', 'Münferit'], ['konaklayan', 'Konaklayan'], ['uye', 'Üye']];
   function renderMisafirler() {
     content.innerHTML = '<h1 class="page-title">Misafirler</h1>' +

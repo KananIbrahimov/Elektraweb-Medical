@@ -37,7 +37,7 @@ Medical modülü her seans için şu **üç koşulun aynı anda** sağlandığı
 
 | Ekran | Ne yapar |
 |-------|----------|
-| **Misafir Girişi (Toplu Satış)** | Elektraweb Toplu Satış düzeni. En üstte misafir tipi: **Inhouse** (check-in yapmış, oda no ile), **Münferit** (dışarıdan gelen; yeni misafir buradan açılır), **Üye**. Doktor ortadaki katalogdan **hizmet, lab testi, paket ve ürünü** ekler, her satırı **ücretli / ücretsiz** işaretler. **Kaydet**: hizmetler reçeteye gider (ücreti plan kaydedilince adisyona yazılır); lab testleri doktor isteği olarak yeni lab formuna yazılır; paket ve ürünler adisyona yazılır (inhouse: odaya kapat). **Kaydet ve Ödeme Al**: ödeme tipi seçilerek kapatılır. |
+| **Misafir Girişi (Toplu Satış)** | Elektraweb Toplu Satış düzeni. En üstte misafir tipi: **Inhouse** (check-in yapmış, oda no ile), **Münferit** (dışarıdan gelen; yeni misafir buradan açılır), **Üye**. Sol tarafta **Hizmetler / Ürünler / Lab** başlıkları açılınca **Ücretli** ve **Ücretsiz** ana grupları ve onların altındaki gruplar gelir. Doktor kartlardan ekler; satırın ücretli/ücretsiz olması seçtiği gruptan gelir. **Kaydet**: hizmetler reçeteye gider (ücreti plan kaydedilince adisyona yazılır); lab testleri doktor isteği olarak yeni lab formuna yazılır; paket ve ürünler adisyona yazılır (inhouse: odaya kapat). **Kaydet ve Ödeme Al**: ödeme tipi seçilerek kapatılır. |
 | **Rezervasyon Planlama** | *Oto. Planlama*: doktor reçetesi (adet, ücretli/ücretsiz) → **Otomatik Planla** → öneri → **Kaydet**. Ücretli seanslar için MEDICAL adisyonu açılır (inhouse ise odaya kapatılır). Yerleştirilemeyen seanslar gerekçesiyle gösterilir. *Rezervasyon Takvimi*: Elektraweb Spa takvimi düzeninde, görevli veya mekân sütunlarıyla; hazırlık süreleri ve öğle arası görünür. |
 | **Rezervasyon Listesi** | Kayıtlı tüm seanslar; filtrelenebilir (Ücretli / Ücretsiz sekmeleri). |
 | **Ürün Satışları** | Toplu Satış düzeninde ürün kataloğu ve sepet. APTEK adisyonu açar. |
@@ -45,7 +45,7 @@ Medical modülü her seans için şu **üç koşulun aynı anda** sağlandığı
 | **Adisyon Listesi** | Hizmet, ürün ve paket adisyonları; detay ve iptal. |
 | **Paket Satışları** | Paket satılınca içindeki hizmetler reçeteye ücretsiz seans olarak eklenir, sonra otomatik planlanır. |
 | **Raporlar** | Hizmet bazında seans, personel iş yükü, mekân doluluk, gelir özeti. |
-| **Tanımlar** | Hizmet, Ürün, Paket, Mekanlar ve Masaj Odaları, Görevli, Shift, Hizmet-Görevli Eşleştirme, Hizmet-Mekan Eşleştirme, Üye, Lab Test Grupları, Lab Test Tanımları, Planlama Parametreleri. Tanımlar değişince takvim yeniden hesaplanır. |
+| **Tanımlar** | Üç katalog alanı: **Hizmet** (Grupları, Tanımları), **Ürün** (Grupları, Tanımları), **Lab Test** (Grupları, Tanımları). Her grubun bir **Ana Grubu** vardır: Ücretli veya Ücretsiz. Tanım girerken seçilen grup, kaydın Toplu Satış'ta nerede görüneceğini belirler (Hizmetler › Ücretli Hizmetler › Prosedurlar Ödənişli gibi). Bir hizmet birden fazla gruba bağlanabilir (ör. vanna hem ücretli hem ücretsiz). Ayrıca **Planlama Tanımları**: Paket, Mekanlar, Görevli, Shift, Hizmet-Görevli ve Hizmet-Mekan Eşleştirme, Üye, Planlama Parametreleri. Planlama tanımları değişince takvim yeniden hesaplanır. |
 
 ## Elektraweb alanlarıyla eşleştirme
 

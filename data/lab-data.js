@@ -10,14 +10,14 @@
 
   // Lab Test Grupları
   var groups = [
-    { id: 'lg1', name: 'Qanın Ümumi Analizi', standard: true },
-    { id: 'lg2', name: 'Qanın Biokimyəvi Analizi Kişi', standard: true, gender: 'M' },
-    { id: 'lg3', name: 'Qanın Biokimyəvi Analizi Qadın', standard: true, gender: 'F' },
-    { id: 'lg4', name: 'Lipidspektri' },
-    { id: 'lg5', name: 'Hormonlar' },
-    { id: 'lg6', name: 'Sidiyin Ümumi Analizi' },
-    { id: 'lg7', name: 'Revmatik Testlər' },
-    { id: 'lg8', name: 'İnfeksiyalar' }
+    { id: 'lg1', name: 'Qanın Ümumi Analizi', standard: true, paid: false },
+    { id: 'lg2', name: 'Qanın Biokimyəvi Analizi Kişi', standard: true, gender: 'M', paid: false },
+    { id: 'lg3', name: 'Qanın Biokimyəvi Analizi Qadın', standard: true, gender: 'F', paid: false },
+    { id: 'lg4', name: 'Lipidspektri', paid: true },
+    { id: 'lg5', name: 'Hormonlar', paid: true },
+    { id: 'lg6', name: 'Sidiyin Ümumi Analizi', paid: true },
+    { id: 'lg7', name: 'Revmatik Testlər', paid: true },
+    { id: 'lg8', name: 'İnfeksiyalar', paid: true }
   ];
 
   // Lab Test Tanımları: [grup, ad, birim, min, max, cinsiyet]

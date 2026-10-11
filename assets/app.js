@@ -17,6 +17,8 @@
   var GTYPE = { inhouse: 'Inhouse', munferit: 'Münferit', uye: 'Üye' };
   function roomLbl(g) { return g.room || GTYPE[g.type] || '—'; }
   function gLabel(g) { return roomLbl(g) + ' - ' + g.name; }
+  function ugName(p) { return IX.ug[p.groupId] ? IX.ug[p.groupId].name : ''; }
+  function paidLbl(x) { return x ? 'Ücretli' : 'Ücretsiz'; }
   function money(v) { return fmtN(v, 2) + ' AZN'; }
   var ICON = {
     plus: '<path d="M12 5v14M5 12h14"/>',
@@ -34,7 +36,7 @@
   var S = { guestId: 'g1', rx: {}, proposal: null, calDate: '2026-10-12', calMode: 'staff', calGuest: 'g1', sel: {}, tab: {}, filters: {}, seq: 1 };
 
   function index() {
-    IX = { p: by(D.procedures), r: by(D.rooms), s: by(D.staff), g: by(D.guests), lg: by(L.groups), lt: by(L.tests), u: by(D.products), k: by(D.packages), m: by(D.members) };
+    IX = { p: by(D.procedures), r: by(D.rooms), s: by(D.staff), g: by(D.guests), lg: by(L.groups), lt: by(L.tests), u: by(D.products), k: by(D.packages), m: by(D.members), hg: by(D.serviceGroups), ug: by(D.productGroups) };
   }
   function rebuild() {
     index();
@@ -468,6 +470,7 @@
     var rows = activeTab('hizmet', D.procedures).map(function (p, i) { return p; });
     var o = { id: 'hizmet', rows: rows, open: editHizmet, cols: [
       { k: 'name', label: 'Hizmet Adı' },
+      { k: 'groups', label: 'Hizmet Grubu', text: function (p) { return (p.groups || []).map(function (g) { return IX.hg[g] ? IX.hg[g].name : ''; }).join(', '); } },
       { k: 'price', label: 'Fiyat (AZN)', cls: 'r num', text: function (p) { return fmtN(p.price || 0, 2); } },
       { k: 'duration', label: 'Hizmet Süresi (dk)', cls: 'r num' },
       { k: 'prepBefore', label: 'Öncesi Hazırlık (dk)', cls: 'r num', text: function (p) { return p.prepBefore || ''; } },
@@ -504,8 +507,9 @@
     openForm({
       title: 'Hizmet Tanımı', sub: id ? '#' + id : 'Yeni kayıt',
       values: { name: p.name, price: p.price || 0, duration: p.duration, prepBefore: p.prepBefore || '', prepAfter: p.prepAfter || '', secondStaffRequired: !!p.secondStaffRequired, genderMatch: !!p.genderMatch, active: p.active !== false,
-        afterProc: after.procedureId || '', afterGap: after.minGap || '', nsd: p.notSameDayWith || [] },
+        afterProc: after.procedureId || '', afterGap: after.minGap || '', nsd: p.notSameDayWith || [], groups: p.groups || [] },
       rows: [
+        [{ k: 'groups', label: 'Hizmet Grubu (Toplu Satış’ta bu grupların altında görünür)', type: 'checks', options: D.serviceGroups.map(function (g) { return { v: g.id, t: anaOf('hizmet', g.paid) + ' › ' + g.name }; }) }],
         [{ k: 'name', label: 'Hizmet Adı', req: true }, { k: 'price', label: 'Fiyat (AZN)', type: 'number', step: 'any' }, { k: 'duration', label: 'Hizmet Süresi (dakika)', type: 'number', req: true }],
         [{ k: 'prepBefore', label: 'Masaj Öncesi Ön Hazırlık Süresi (dk)', type: 'number' }, { k: 'prepAfter', label: 'Masaj Sonrası Ön Hazırlık Süresi (dk)', type: 'number' }],
         [{ k: 'active', label: 'Spa Aktif', type: 'toggle' }, { k: 'secondStaffRequired', label: 'Spa Rezervasyonunda 2.Görevli Zorunlu', type: 'toggle' }, { k: 'genderMatch', label: 'Görevli cinsiyeti misafirle aynı olsun', type: 'toggle' }],
@@ -515,12 +519,13 @@
       ],
       save: function (v) {
         if (!(v.duration > 0)) return 'Hizmet süresi 0’dan büyük olmalı.';
+        if (!v.groups.length) return 'En az bir hizmet grubu seçin.';
         if (v.afterProc && !(v.afterGap >= 0)) return 'Sıra kuralı için bekleme süresini girin.';
         var t = id ? p : { id: newId('h'), rooms: [] };
         t.name = v.name; t.price = v.price || 0; t.duration = v.duration; t.prepBefore = v.prepBefore || 0; t.prepAfter = v.prepAfter || 0;
         t.secondStaffRequired = v.secondStaffRequired; t.genderMatch = v.genderMatch; t.active = v.active;
         t.after = v.afterProc ? [{ procedureId: v.afterProc, minGap: v.afterGap || 0 }] : [];
-        t.notSameDayWith = v.nsd;
+        t.notSameDayWith = v.nsd; t.groups = v.groups;
         if (!id) { D.procedures.push(t); S.sel.hizmet = t.id; }
         defsChanged(); render();
         if (!id) toast('Hizmet eklendi. Hizmet-Mekan ve Hizmet-Görevli Eşleştirme ekranlarından mekân ve görevli atayın.');
@@ -708,6 +713,7 @@
     var o = { id: 'lab-grup', rows: L.groups, open: editLabGroup, cols: [
       { k: 'name', label: 'Ad' },
       { k: 'count', label: 'Test Sayısı', cls: 'r num', text: function (g) { return L.tests.filter(function (t) { return t.groupId === g.id; }).length; } },
+      { k: 'ana', label: 'Ana Grup', options: ['Ücretli Lab', 'Ücretsiz Lab'], text: function (g) { return g.paid ? 'Ücretli Lab' : 'Ücretsiz Lab'; } },
       { k: 'standard', label: 'Girişte Standart', cls: 'c', filter: false, html: function (g) { return yn(g.standard); } },
       { k: 'gender', label: 'Cinsiyet', options: ['Hepsi', 'Erkek', 'Kadın'], text: function (g) { return GENDER[g.gender || '']; } }] };
     var tb = stdTools('lab-grup', function () { editLabGroup(null); }, editLabGroup, function (id) {
@@ -720,13 +726,13 @@
     bindToolbar('lab-grup', tb); bindGrid(o);
   };
   function editLabGroup(id) {
-    var g = id ? IX.lg[id] : { name: '', standard: false, gender: '' };
-    openForm({ title: 'Lab Test Grubu', sub: id ? '#' + id : 'Yeni kayıt', values: { name: g.name, standard: !!g.standard, gender: g.gender || '' },
-      rows: [[{ k: 'name', label: 'Ad', req: true }, { k: 'gender', label: 'Cinsiyet', type: 'select', options: [{ v: '', t: 'Hepsi' }, { v: 'M', t: 'Erkek' }, { v: 'F', t: 'Kadın' }] }],
+    var g = id ? IX.lg[id] : { name: '', standard: false, gender: '', paid: true };
+    openForm({ title: 'Lab Test Grubu', sub: id ? '#' + id : 'Yeni kayıt', values: { name: g.name, standard: !!g.standard, gender: g.gender || '', ana: g.paid ? '1' : '0' },
+      rows: [[{ k: 'ana', label: 'Ana Grup', type: 'select', options: [{ v: '1', t: 'Ücretli Lab' }, { v: '0', t: 'Ücretsiz Lab' }] }, { k: 'name', label: 'Grup Adı', req: true }, { k: 'gender', label: 'Cinsiyet', type: 'select', options: [{ v: '', t: 'Hepsi' }, { v: 'M', t: 'Erkek' }, { v: 'F', t: 'Kadın' }] }],
         [{ k: 'standard', label: 'Girişte standart analiz', type: 'toggle' }]],
       save: function (v) {
         var t = id ? g : { id: newId('lg') };
-        t.name = v.name; t.standard = v.standard; t.gender = v.gender;
+        t.name = v.name; t.standard = v.standard; t.gender = v.gender; t.paid = v.ana === '1';
         if (!id) L.groups.push(t);
         index(); render();
       } });
@@ -735,6 +741,7 @@
   // ---------- Lab Test Tanımları ----------
   VIEWS['lab-tanim'] = function () {
     var o = { id: 'lab-tanim', rows: L.tests, open: editLabTest, cols: [
+      { k: 'ana', label: 'Ana Grup', options: ['Ücretli Lab', 'Ücretsiz Lab'], text: function (t) { return IX.lg[t.groupId] ? (IX.lg[t.groupId].paid ? 'Ücretli Lab' : 'Ücretsiz Lab') : ''; } },
       { k: 'group', label: 'Grup Adı', text: function (t) { return IX.lg[t.groupId] ? IX.lg[t.groupId].name : ''; } },
       { k: 'name', label: 'Ad' }, { k: 'unit', label: 'Birim' },
       { k: 'min', label: 'Min Değer', cls: 'r num', text: function (t) { return fmtN(t.min, 2); } },
@@ -754,7 +761,7 @@
   function editLabTest(id) {
     var t = id ? IX.lt[id] : { groupId: L.groups[0] && L.groups[0].id, name: '', unit: '', min: 0, max: 0, gender: '', price: 10 };
     openForm({ title: 'Lab Test Tanımları', sub: id ? '#' + id : 'Yeni kayıt', values: t,
-      rows: [[{ k: 'groupId', label: 'Grup', type: 'select', options: L.groups.map(function (g) { return { v: g.id, t: g.name }; }) }, { k: 'name', label: 'Ad', req: true }],
+      rows: [[{ k: 'groupId', label: 'Grup', type: 'select', options: L.groups.map(function (g) { return { v: g.id, t: (g.paid ? 'Ücretli Lab' : 'Ücretsiz Lab') + ' › ' + g.name }; }) }, { k: 'name', label: 'Ad', req: true }],
         [{ k: 'min', label: 'Min', type: 'number', step: 'any', req: true }, { k: 'max', label: 'Max', type: 'number', step: 'any', req: true }, { k: 'unit', label: 'Birim' },
           { k: 'gender', label: 'Cinsiyet', type: 'select', options: [{ v: '', t: 'Hepsi' }, { v: 'M', t: 'Erkek' }, { v: 'F', t: 'Kadın' }] }, { k: 'price', label: 'Fiyat (AZN)', type: 'number', step: 'any' }]],
       save: function (v) {
@@ -902,7 +909,7 @@
 
   VIEWS.giris = function () {
     var t = S.gType || 'inhouse';
-    var T = S.ts || (S.ts = { cart: [], cat: 'hizmet', q: '', doctor: '', mn: '', nw: { name: '', gender: 'F', phone: '', from: TODAY, to: U.addDays(TODAY, 6) }, member: '', mFrom: TODAY, mTo: U.addDays(TODAY, 6) });
+    var T = S.ts || (S.ts = { cart: [], cat: 'hizmet:1', q: '', doctor: '', mn: '', nw: { name: '', gender: 'F', phone: '', from: TODAY, to: U.addDays(TODAY, 6) }, member: '', mFrom: TODAY, mTo: U.addDays(TODAY, 6) });
     var doctors = D.staff.filter(function (s) { return /^Dr\./.test(s.name) && s.active !== false; });
     if (!T.doctor && doctors[0]) T.doctor = doctors[0].name;
 
@@ -917,31 +924,58 @@
       g = D.guests.filter(function (x) { return x.memberId === T.member && x.checkIn === T.mFrom; })[0] || null;
     }
 
-    // katalog
-    var cats = [
-      { k: 'hizmet', t: 'Tüm Hizmetler', cls: 'c-blue' }, { k: 'urun', t: 'Tüm Ürünler', cls: 'c-orange' }, { k: 'paket', t: 'Tüm Paketler', cls: 'c-purple' },
-      { k: 'lab', t: 'Laboratoriya Analizləri' }
+    // katalog: Ana kategori → Ana Grup (Ücretli/Ücretsiz) → Grup
+    var TREE = [
+      { k: 'hizmet', t: 'Hizmetler', cls: 'c-blue', groups: D.serviceGroups },
+      { k: 'urun', t: 'Ürünler', cls: 'c-orange', groups: D.productGroups },
+      { k: 'lab', t: 'Lab', cls: 'c-pink', groups: L.groups }
     ];
-    L.groups.forEach(function (lg) { cats.push({ k: 'lab:' + lg.id, t: 'Lab · ' + lg.name }); });
-    D.products.map(function (p) { return p.group; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).forEach(function (gr) { cats.push({ k: 'urun:' + gr, t: gr }); });
-
+    if (!T.open) T.open = { hizmet: true };
+    if (!T.cat || T.cat === 'hizmet' && false) T.cat = 'hizmet:1';
+    function gName(kind, gid) { var gr = kind === 'hizmet' ? IX.hg[gid] : kind === 'urun' ? IX.ug[gid] : IX.lg[gid]; return gr ? gr.name : ''; }
     function catalog() {
       var items = [];
-      D.procedures.filter(function (p) { return p.active !== false; }).forEach(function (p) { items.push({ kind: 'hizmet', id: p.id, name: p.name, min: p.duration, price: p.price || 0, cat: 'hizmet' }); });
-      D.products.filter(function (p) { return p.active !== false; }).forEach(function (p) { items.push({ kind: 'urun', id: p.id, name: p.name, min: 0, price: p.price, cat: 'urun', sub: p.group }); });
-      D.packages.filter(function (k) { return k.active !== false; }).forEach(function (k) { items.push({ kind: 'paket', id: k.id, name: k.name, min: 0, price: k.price, cat: 'paket', days: k.days }); });
+      D.procedures.filter(function (p) { return p.active !== false; }).forEach(function (p) {
+        (p.groups || []).forEach(function (gid) { var gr = IX.hg[gid]; if (gr) items.push({ kind: 'hizmet', id: p.id, name: p.name, min: p.duration, price: p.price || 0, paid: !!gr.paid, gid: gid }); });
+      });
+      D.products.filter(function (p) { return p.active !== false; }).forEach(function (p) {
+        var gr = IX.ug[p.groupId]; if (gr) items.push({ kind: 'urun', id: p.id, name: p.name, min: 0, price: p.price, paid: !!gr.paid, gid: gr.id });
+      });
       L.tests.forEach(function (lt) {
         if (g && lt.gender && lt.gender !== g.gender) return;
-        items.push({ kind: 'lab', id: lt.id, name: 'LAB ' + lt.name, min: 0, price: lt.price || 0, cat: 'lab', sub: lt.groupId });
+        var gr = IX.lg[lt.groupId]; if (gr) items.push({ kind: 'lab', id: lt.id, name: 'LAB ' + lt.name, min: 0, price: lt.price || 0, paid: !!gr.paid, gid: gr.id });
       });
-      var q = T.q.toLocaleLowerCase('tr');
+      D.packages.filter(function (k) { return k.active !== false; }).forEach(function (k) { items.push({ kind: 'paket', id: k.id, name: k.name, min: 0, price: k.price, paid: true, days: k.days }); });
+      var q = T.q.toLocaleLowerCase('tr'), seen = {};
+      var c = T.cat.split(':');
       return items.filter(function (it) {
-        if (q) return it.name.toLocaleLowerCase('tr').indexOf(q) >= 0;
-        if (T.cat === it.cat) return true;
-        if (T.cat.indexOf('lab:') === 0) return it.kind === 'lab' && it.sub === T.cat.slice(4);
-        if (T.cat.indexOf('urun:') === 0) return it.kind === 'urun' && it.sub === T.cat.slice(5);
-        return false;
+        var ok;
+        if (q) ok = it.name.toLocaleLowerCase('tr').indexOf(q) >= 0;
+        else if (c[0] !== it.kind) ok = false;
+        else if (c.length === 1) ok = true;
+        else if (c[1] === 'g') ok = it.gid === c[2];
+        else ok = it.paid === (c[1] === '1');
+        if (!ok) return false;
+        var key = it.kind + it.id + it.paid + (c[1] === 'g' ? it.gid : '');
+        if (seen[key]) return false;
+        seen[key] = 1; return true;
       });
+    }
+    function catTree() {
+      var h = TREE.map(function (n) {
+        var open = !!T.open[n.k];
+        var out = '<button type="button" class="cat ' + n.cls + '" data-tg="' + n.k + '" aria-expanded="' + open + '">' + esc(n.t) + '<span class="chev">' + (open ? '▾' : '▸') + '</span></button>';
+        if (open) [true, false].forEach(function (pd) {
+          var key = n.k + ':' + (pd ? '1' : '0');
+          out += '<button type="button" class="cat sub1' + (pd ? ' paid' : ' free') + '" data-c="' + key + '"' + (T.cat === key && !T.q ? ' aria-pressed="true"' : '') + '>' + esc(anaOf(n.k, pd)) + '</button>';
+          n.groups.filter(function (gr) { return !!gr.paid === pd; }).forEach(function (gr) {
+            var gk = n.k + ':g:' + gr.id;
+            out += '<button type="button" class="cat sub2" data-c="' + gk + '"' + (T.cat === gk && !T.q ? ' aria-pressed="true"' : '') + '>' + esc(gr.name) + '</button>';
+          });
+        });
+        return out;
+      }).join('');
+      return h + '<button type="button" class="cat c-purple" data-c="paket"' + (T.cat === 'paket' && !T.q ? ' aria-pressed="true"' : '') + '>Paketler</button>';
     }
     function itemOf(c) {
       if (c.kind === 'hizmet') { var p = IX.p[c.id]; return p && { name: p.name, price: p.price || 0 }; }
@@ -988,18 +1022,19 @@
       '<label class="fld" for="tsDr"><span>İsteyen Doktor</span><select id="tsDr">' + doctors.map(function (d) { return '<option' + (d.name === T.doctor ? ' selected' : '') + '>' + esc(d.name) + '</option>'; }).join('') + '</select></label>';
 
     var tiles = catalog().map(function (it) {
-      var inCart = T.cart.some(function (c) { return c.kind === it.kind && c.id === it.id; });
+      var inCart = T.cart.some(function (c) { return c.kind === it.kind && c.id === it.id && c.paid === it.paid; });
       return '<div class="etile"><b>' + esc(it.name) + '</b>' +
         '<span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>' + (it.kind === 'paket' ? it.days + ' gün' : it.min + 'min') + '</span>' +
-        '<span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="1"/><circle cx="12" cy="12" r="2"/></svg>' + fmtN(it.price, it.price % 1 ? 2 : 0) + ' AZN</span>' +
-        '<button type="button" class="btn red" data-kind="' + it.kind + '" data-id="' + it.id + '">' + (inCart ? 'Ekle (+1)' : 'Ekle') + '</button></div>';
+        '<span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="1"/><circle cx="12" cy="12" r="2"/></svg>' + (it.paid ? fmtN(it.price, it.price % 1 ? 2 : 0) + ' AZN' : '0 AZN · Ücretsiz') + '</span>' +
+        (it.gid ? '<small class="tg-grp">' + esc(gName(it.kind, it.gid)) + '</small>' : '') +
+        '<button type="button" class="btn red" data-kind="' + it.kind + '" data-id="' + it.id + '" data-p="' + (it.paid ? 1 : 0) + '">' + (inCart ? 'Ekle (+1)' : 'Ekle') + '</button></div>';
     }).join('') || '<p class="hint" style="grid-column:1/-1">Bu kategoride kayıt yok.</p>';
 
     var cartRows = T.cart.length ? T.cart.map(function (c, i) {
       var it = itemOf(c);
       return '<tr><td><span class="kind k-' + c.kind + '">' + KIND[c.kind] + '</span> ' + esc(it.name) + '</td>' +
         '<td class="c">' + (c.kind === 'lab' || c.kind === 'paket' ? '<span class="num">1</span>' : '<input type="number" min="1" max="30" value="' + c.qty + '" data-i="' + i + '" id="tq-' + i + '" aria-label="Miktar" style="width:44px;text-align:center">') + '</td>' +
-        '<td class="c"><button type="button" class="pill ' + (c.paid ? 'paid' : 'free') + '" data-paid="' + i + '" title="Ücretli / ücretsiz">' + (c.paid ? 'Ücretli' : 'Ücretsiz') + '</button></td>' +
+        '<td class="c"><span class="pill ' + (c.paid ? 'paid' : 'free') + '">' + (c.paid ? 'Ücretli' : 'Ücretsiz') + '</span></td>' +
         '<td class="r num">' + fmtN(c.paid ? c.qty * it.price : 0, 2) + '</td>' +
         '<td><button type="button" class="tool del" data-del="' + i + '" aria-label="Kaldır" style="width:24px;height:22px">' + svg('trash') + '</button></td></tr>';
     }).join('') : '<tr class="empty-row"><td colspan="5">Ortadan hizmet, lab, paket veya ürün ekleyin</td></tr>';
@@ -1016,17 +1051,22 @@
       '<p class="hint" style="margin:0">Hizmetler misafirin reçetesine eklenir, ücreti plan kaydedilince adisyona yazılır. Lab testleri yeni lab formuna, paket ve ürünler hemen adisyona yazılır.</p></div>';
 
     content.innerHTML = pageHead('Toplu Satış') + seg + strip + '<div class="toplu">' +
-      '<div class="cat-list">' + cats.map(function (c) { return '<button type="button" class="cat ' + (c.cls || '') + '" data-c="' + esc(c.k) + '"' + (T.cat === c.k && !T.q ? ' aria-pressed="true"' : '') + '>' + esc(c.t) + '</button>'; }).join('') + '</div>' +
+      '<div class="cat-list">' + catTree() + '</div>' +
       '<div class="etiles">' + tiles + '</div>' + right + '</div>';
 
     // olaylar
     [].forEach.call(content.querySelectorAll('.ts'), function (b) { b.addEventListener('click', function () { S.gType = b.dataset.k; render(); }); });
-    content.querySelector('.cat-list').addEventListener('click', function (e) { var b = e.target.closest('[data-c]'); if (b) { T.cat = b.dataset.c; T.q = ''; render(); } });
+    content.querySelector('.cat-list').addEventListener('click', function (e) {
+      var tg = e.target.closest('[data-tg]');
+      if (tg) { var k = tg.dataset.tg; T.open[k] = !T.open[k]; if (T.open[k]) { T.cat = k + ':1'; T.q = ''; } render(); return; }
+      var b = e.target.closest('[data-c]'); if (b) { T.cat = b.dataset.c; T.q = ''; render(); }
+    });
     content.querySelector('.etiles').addEventListener('click', function (e) {
       var b = e.target.closest('button[data-kind]'); if (!b) return;
-      var ex = T.cart.filter(function (c) { return c.kind === b.dataset.kind && c.id === b.dataset.id; })[0];
+      var pd = b.dataset.p === '1';
+      var ex = T.cart.filter(function (c) { return c.kind === b.dataset.kind && c.id === b.dataset.id && c.paid === pd; })[0];
       if (ex) { if (ex.kind === 'hizmet' || ex.kind === 'urun') ex.qty++; else toast('Bu kalem sepette zaten var.'); }
-      else T.cart.push({ kind: b.dataset.kind, id: b.dataset.id, qty: 1, paid: true });
+      else T.cart.push({ kind: b.dataset.kind, id: b.dataset.id, qty: 1, paid: pd });
       render();
     });
     var tsQ = $('tsQ');
@@ -1112,7 +1152,8 @@
   VIEWS.urun = function () {
     var g = IX.g[S.guestId];
     var prods = D.products.filter(function (p) { return p.active !== false; });
-    var groups = prods.map(function (p) { return p.group; }).filter(function (x, i, a) { return a.indexOf(x) === i; });
+    var groups = D.productGroups.filter(function (gr) { return gr.paid && prods.some(function (p) { return p.groupId === gr.id; }); }).map(function (gr) { return gr.name; });
+    prods = prods.filter(function (p) { return IX.ug[p.groupId] && IX.ug[p.groupId].paid; });
     var cg = S.prodGroup || '';
     var cart = S.cart || (S.cart = []);
     var pays = payOptions(g);
@@ -1121,8 +1162,8 @@
 
     var left = '<div class="cat-list"><button type="button" class="cat all" data-g=""' + (cg === '' ? ' aria-pressed="true"' : '') + '>Tüm Ürünler</button>' +
       groups.map(function (x) { return '<button type="button" class="cat" data-g="' + esc(x) + '"' + (cg === x ? ' aria-pressed="true"' : '') + '>' + esc(x) + '</button>'; }).join('') + '</div>';
-    var tiles = '<div class="tiles">' + prods.filter(function (p) { return !cg || p.group === cg; }).map(function (p) {
-      return '<div class="tile"><b>' + esc(p.name) + '</b><span class="hint" style="margin:0">' + esc(p.group) + '</span><span class="num">' + money(p.price) + '</span><button type="button" class="btn red" data-add="' + p.id + '">Ekle</button></div>';
+    var tiles = '<div class="tiles">' + prods.filter(function (p) { return !cg || ugName(p) === cg; }).map(function (p) {
+      return '<div class="tile"><b>' + esc(p.name) + '</b><span class="hint" style="margin:0">' + esc(ugName(p)) + '</span><span class="num">' + money(p.price) + '</span><button type="button" class="btn red" data-add="' + p.id + '">Ekle</button></div>';
     }).join('') + '</div>';
     var right = '<section class="card">' + guestSelect('usGuest') +
       '<label class="fld" for="usPay"><span>Ödeme</span><select id="usPay">' + pays.map(function (x) { return '<option' + (x === S.pay ? ' selected' : '') + '>' + x + '</option>'; }).join('') + '</select></label>' +
@@ -1276,11 +1317,53 @@
     $('rTo').addEventListener('change', function (e) { if (e.target.value) { S.rTo = e.target.value; render(); } });
   };
 
+
+  // ---------- Grup ekranları (Ana Grup → Grup) ----------
+  // kind: 'hizmet' | 'urun'. Ana grup = Ücretli / Ücretsiz.
+  var ANA = { hizmet: ['Ücretli Hizmetler', 'Ücretsiz Hizmetler'], urun: ['Ücretli Ürünler', 'Ücretsiz Ürünler'], lab: ['Ücretli Lab', 'Ücretsiz Lab'] };
+  function anaOf(kind, paid) { return ANA[kind][paid ? 0 : 1]; }
+  function groupView(kind) {
+    var id = kind + '-grup', list = kind === 'hizmet' ? D.serviceGroups : D.productGroups;
+    var title = kind === 'hizmet' ? 'Hizmet Grupları' : 'Ürün Grupları';
+    function members(g) { return kind === 'hizmet' ? D.procedures.filter(function (p) { return (p.groups || []).indexOf(g.id) >= 0; }) : D.products.filter(function (p) { return p.groupId === g.id; }); }
+    var o = { id: id, rows: list, open: edit, cols: [
+      { k: 'ana', label: 'Ana Grup', options: ANA[kind], text: function (g) { return anaOf(kind, g.paid); } },
+      { k: 'name', label: 'Grup Adı' },
+      { k: 'count', label: kind === 'hizmet' ? 'Hizmet Sayısı' : 'Ürün Sayısı', cls: 'r num', text: function (g) { return members(g).length; } },
+      { k: 'items', label: kind === 'hizmet' ? 'Hizmetler' : 'Ürünler', text: function (g) { return members(g).map(function (x) { return x.name; }).join(', '); } }] };
+    function edit(gid) {
+      var g = gid ? list.filter(function (x) { return x.id === gid; })[0] : { name: '', paid: true };
+      openForm({ title: kind === 'hizmet' ? 'Hizmet Grubu' : 'Ürün Grubu', sub: gid ? '#' + gid : 'Yeni kayıt', values: { ana: g.paid ? '1' : '0', name: g.name },
+        rows: [[{ k: 'ana', label: 'Ana Grup', type: 'select', options: [{ v: '1', t: ANA[kind][0] }, { v: '0', t: ANA[kind][1] }] }, { k: 'name', label: 'Grup Adı', req: true }]],
+        save: function (v) {
+          var x = gid ? g : { id: newId(kind === 'hizmet' ? 'hg' : 'ug') };
+          x.name = v.name; x.paid = v.ana === '1';
+          if (!gid) { list.push(x); S.sel[id] = x.id; }
+          index(); render();
+        } });
+    }
+    var tb = stdTools(id, function () { edit(null); }, edit, function (gid) {
+      var g = list.filter(function (x) { return x.id === gid; })[0], n = members(g).length;
+      if (kind === 'urun' && n) { toast('Bu grupta ' + n + ' ürün var. Önce ürünleri başka gruba taşıyın.'); return; }
+      openConfirm('Grup Sil', '“' + g.name + '” silinecek.' + (n ? ' ' + n + ' hizmetin bu grup bağlantısı kaldırılacak.' : ''), function () {
+        if (kind === 'hizmet') { D.serviceGroups = D.serviceGroups.filter(function (x) { return x.id !== gid; }); D.procedures.forEach(function (p) { p.groups = (p.groups || []).filter(function (x) { return x !== gid; }); }); }
+        else D.productGroups = D.productGroups.filter(function (x) { return x.id !== gid; });
+        index(); S.sel[id] = null; render();
+      });
+    });
+    content.innerHTML = pageHead(title) + toolbar(id, tb, list.length) + grid(o) +
+      '<p class="hint" style="margin:8px 0 0">Ana Grup, Toplu Satış ekranında grubun hangi başlık altında (' + ANA[kind].join(' / ') + ') görüneceğini belirler. ' +
+      (kind === 'hizmet' ? 'Hizmet Tanımları ekranında hizmeti bir veya birden fazla gruba bağlayın.' : 'Ürün Tanımları ekranında ürünü bir gruba bağlayın.') + '</p>';
+    bindToolbar(id, tb); bindGrid(o);
+  }
+  VIEWS['hizmet-grup'] = function () { groupView('hizmet'); };
+  VIEWS['urun-grup'] = function () { groupView('urun'); };
+
   // ---------- Ürün Tanımları ----------
   VIEWS['urun-tanim'] = function () {
     var rows = activeTab('urun-tanim', D.products);
     var o = { id: 'urun-tanim', rows: rows, open: editUrun, cols: [
-      { k: 'id', label: 'Id' }, { k: 'group', label: 'Ürün Grubu Adı' }, { k: 'name', label: 'Ürün Adı' },
+      { k: 'id', label: 'Id' }, { k: 'group', label: 'Ürün Grubu Adı', text: ugName, options: D.productGroups.map(function (g) { return g.name; }) }, { k: 'ana', label: 'Ana Grup', options: ANA.urun, text: function (p) { return IX.ug[p.groupId] ? anaOf('urun', IX.ug[p.groupId].paid) : ''; } }, { k: 'name', label: 'Ürün Adı' },
       { k: 'price', label: 'Fiyat', cls: 'r num', text: function (p) { return fmtN(p.price, 2); } }, { k: 'cur', label: 'Döviz', filter: false, text: function () { return 'AZN'; } },
       { k: 'income', label: 'Gelir Grubu' }, { k: 'active', label: 'Aktif', cls: 'c', filter: false, html: function (p) { return yn(p.active !== false); } }] };
     var tb = stdTools('urun-tanim', function () { editUrun(null); }, editUrun, function (id) {
@@ -1290,15 +1373,15 @@
     bindToolbar('urun-tanim', tb); bindTabs('urun-tanim', render); bindGrid(o);
   };
   function editUrun(id) {
-    var p = id ? IX.u[id] : { group: '', name: '', price: 0, income: 'APTEK', active: true };
-    var groups = D.products.map(function (x) { return x.group; }).filter(function (g, i, a) { return a.indexOf(g) === i; });
+    var p = id ? IX.u[id] : { groupId: (S.sel['urun-grup'] && IX.ug[S.sel['urun-grup']] ? S.sel['urun-grup'] : D.productGroups[0] && D.productGroups[0].id), name: '', price: 0, income: 'APTEK', active: true };
+    if (!D.productGroups.length) { toast('Önce Ürün Grupları ekranından bir grup tanımlayın.'); return; }
     openForm({ title: 'Ürün Tanımı', sub: id ? '#' + id : 'Yeni kayıt', values: p,
-      rows: [[{ k: 'group', label: 'Ürün Grubu Adı', req: true, list: groups }, { k: 'name', label: 'Ürün Adı', req: true }],
+      rows: [[{ k: 'groupId', label: 'Ürün Grubu Adı', type: 'select', options: D.productGroups.map(function (g) { return { v: g.id, t: anaOf('urun', g.paid) + ' › ' + g.name }; }) }, { k: 'name', label: 'Ürün Adı', req: true }],
         [{ k: 'price', label: 'Fiyat (AZN)', type: 'number', step: 'any', req: true }, { k: 'income', label: 'Gelir Grubu', req: true, list: ['APTEK', 'MEDICAL'] }], [{ k: 'active', label: 'Aktif', type: 'toggle' }]],
       save: function (v) {
         if (v.price < 0) return 'Fiyat negatif olamaz.';
         var x = id ? p : { id: newId('u') };
-        x.group = v.group; x.name = v.name; x.price = v.price; x.income = v.income; x.active = v.active;
+        x.groupId = v.groupId; x.name = v.name; x.price = v.price; x.income = v.income; x.active = v.active;
         if (!id) D.products.push(x);
         index(); render();
       } });

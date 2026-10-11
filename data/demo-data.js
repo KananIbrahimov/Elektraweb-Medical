@@ -42,7 +42,17 @@
     { id: 'I1', name: 'İngalyasiya otağı 1', group: 'İngalyasiya', active: true },
     { id: 'I2', name: 'İngalyasiya otağı 2', group: 'İngalyasiya', active: true },
     { id: 'P1', name: 'Prosedur otağı', group: 'Prosedur', active: true },
-    { id: 'H1', name: 'Hicama otaq 1', group: 'Hicamə', active: true }
+    { id: 'H1', name: 'Hicama otaq 1', group: 'Hicamə', active: true },
+    { id: 'D1', name: 'Terapevt otağı', group: 'Həkim otaqları', active: true },
+    { id: 'D2', name: 'Kardioloq otağı', group: 'Həkim otaqları', active: true }
+  ];
+
+  // Elektraweb: Tanımlar → Hizmet Grupları (paid: ücretli grup mu)
+  var serviceGroups = [
+    { id: 'hg1', name: 'Ödənişsiz Müayinələr', paid: false },
+    { id: 'hg2', name: 'Ödənişli Müayinələr', paid: true },
+    { id: 'hg3', name: 'Prosedurlar Ödənişsiz', paid: false },
+    { id: 'hg4', name: 'Prosedurlar Ödənişli', paid: true }
   ];
 
   // Elektraweb: Tanımlar → Hizmet Tanımları  (+ Hizmet-Mekan Eşleştirme = rooms)
@@ -53,15 +63,17 @@
   //   secondStaffRequired → Spa Rezervasyonunda 2. Görevli Zorunlu
   //   after / notSameDayWith / genderMatch / perDay → YENİ alanlar (Elektraweb'de yok)
   var procedures = [
-    { id: 'vanna', group: 'Prosedurlar', price: 25, name: 'Naftalan vannası', duration: 15, prepAfter: 10, rooms: ['V1', 'V2', 'V3', 'V4'] },
-    { id: 'palciq', group: 'Prosedurlar', price: 20, name: 'Palçıq aplikasiyası', duration: 20, prepAfter: 10, secondStaffRequired: true, rooms: ['L1', 'L2'], notSameDayWith: ['vanna'] },
-    { id: 'masaj', group: 'Prosedurlar', price: 30, name: 'Massaj', duration: 20, prepBefore: 5, rooms: ['M1', 'M2', 'M3'], after: [{ procedureId: 'vanna', minGap: 30 }] },
-    { id: 'elektroforez', group: 'Prosedurlar', price: 15, name: 'Elektroforez', duration: 15, rooms: ['E1', 'E2', 'E3', 'A1', 'A2'] },
-    { id: 'amplipuls', group: 'Prosedurlar', price: 15, name: 'Amplipuls', duration: 15, rooms: ['A1', 'A2'] },
-    { id: 'fonoforez', group: 'Prosedurlar', price: 15, name: 'Fonoforez', duration: 15, rooms: ['F1', 'F2'] },
-    { id: 'ingalyasiya', group: 'Prosedurlar', price: 10, name: 'İngalyasiya', duration: 12, rooms: ['I1', 'I2'] },
-    { id: 'ozon', group: 'Prosedurlar', price: 40, name: 'Ozonterapiya', duration: 20, prepBefore: 5, rooms: ['P1'] },
-    { id: 'hicame', group: 'Prosedurlar', price: 35, name: 'Hicamə', duration: 30, prepAfter: 10, rooms: ['H1'], genderMatch: true, notSameDayWith: ['vanna'] }
+    { id: 'vanna', groups: ['hg3', 'hg4'], price: 25, name: 'Naftalan vannası', duration: 15, prepAfter: 10, rooms: ['V1', 'V2', 'V3', 'V4'] },
+    { id: 'palciq', groups: ['hg3'], price: 20, name: 'Palçıq aplikasiyası', duration: 20, prepAfter: 10, secondStaffRequired: true, rooms: ['L1', 'L2'], notSameDayWith: ['vanna'] },
+    { id: 'masaj', groups: ['hg3', 'hg4'], price: 30, name: 'Massaj', duration: 20, prepBefore: 5, rooms: ['M1', 'M2', 'M3'], after: [{ procedureId: 'vanna', minGap: 30 }] },
+    { id: 'elektroforez', groups: ['hg3'], price: 15, name: 'Elektroforez', duration: 15, rooms: ['E1', 'E2', 'E3', 'A1', 'A2'] },
+    { id: 'amplipuls', groups: ['hg4'], price: 15, name: 'Amplipuls', duration: 15, rooms: ['A1', 'A2'] },
+    { id: 'fonoforez', groups: ['hg3'], price: 15, name: 'Fonoforez', duration: 15, rooms: ['F1', 'F2'] },
+    { id: 'ingalyasiya', groups: ['hg3', 'hg4'], price: 10, name: 'İngalyasiya', duration: 12, rooms: ['I1', 'I2'] },
+    { id: 'ozon', groups: ['hg4'], price: 40, name: 'Ozonterapiya', duration: 20, prepBefore: 5, rooms: ['P1'] },
+    { id: 'terapevt', groups: ['hg1'], price: 0, name: 'Terapevt Müayinəsi', duration: 10, rooms: ['D1'] },
+    { id: 'kardioloq', groups: ['hg1', 'hg2'], price: 20, name: 'Kardioloq Qəbulu', duration: 10, rooms: ['D2'] },
+    { id: 'hicame', groups: ['hg4'], price: 35, name: 'Hicamə', duration: 30, prepAfter: 10, rooms: ['H1'], genderMatch: true, notSameDayWith: ['vanna'] }
   ];
 
   // Elektraweb: Tanımlar → Görevli Tanımları  (+ Hizmet-Görevli Eşleştirme = skills, Shift Tanımları = shift/daysOff)
@@ -76,8 +88,8 @@
     { id: 's6', name: 'Nərmin A.', gender: 'F', skills: ['elektroforez', 'amplipuls', 'fonoforez', 'ingalyasiya'], active: true },
     { id: 's7', name: 'Tural B.', gender: 'M', skills: ['elektroforez', 'amplipuls', 'fonoforez'], active: true },
     { id: 's8', name: 'Səbinə K.', gender: 'F', skills: ['ingalyasiya'], active: true },
-    { id: 's9', name: 'Dr. Fərid M.', gender: 'M', skills: ['ozon', 'hicame'], active: true },
-    { id: 's10', name: 'Dr. Könül İ.', gender: 'F', skills: ['ozon', 'hicame'], shift: { start: '08:00', end: '13:00' }, active: true }
+    { id: 's9', name: 'Dr. Fərid M.', gender: 'M', skills: ['ozon', 'hicame', 'terapevt', 'kardioloq'], active: true },
+    { id: 's10', name: 'Dr. Könül İ.', gender: 'F', skills: ['ozon', 'hicame', 'terapevt'], shift: { start: '08:00', end: '13:00' }, active: true }
   ];
 
   var guests = [
@@ -139,18 +151,31 @@
   };
 
 
+  // Elektraweb: Ürün Grupları
+  var productGroups = [
+    { id: 'ug1', name: 'Yağ', paid: true },
+    { id: 'ug2', name: 'Krem', paid: true },
+    { id: 'ug3', name: 'Naftalan Məhsulları', paid: true },
+    { id: 'ug4', name: 'Diş Pastası', paid: true },
+    { id: 'ug5', name: 'Plastır', paid: true },
+    { id: 'ug6', name: 'Dərman Vasitələri', paid: true },
+    { id: 'ug7', name: 'Ödənişsiz Nümunələr', paid: false }
+  ];
+
   // Elektraweb: Ürün Tanımları (Ürün Grubu, Hizmet Adı, Fiyat, Gelir Grubu)
   var products = [
-    { id: 'u1', group: 'Yağ', name: 'Ağ neft 100 ml korobka', price: 15, income: 'APTEK', active: true },
-    { id: 'u2', group: 'Yağ', name: 'Naftalan yağı 250 ml', price: 28, income: 'APTEK', active: true },
-    { id: 'u3', group: 'Krem', name: 'Naftalan kremi 50 ml', price: 12, income: 'APTEK', active: true },
-    { id: 'u4', group: 'Krem', name: 'Naftalan balzamı 30 ml', price: 9, income: 'APTEK', active: true },
-    { id: 'u5', group: 'Naftalan Məhsulları', name: 'Naftalan sabunu', price: 6, income: 'APTEK', active: true },
-    { id: 'u6', group: 'Naftalan Məhsulları', name: 'Naftalan şampunu 200 ml', price: 14, income: 'APTEK', active: true },
-    { id: 'u7', group: 'Diş Pastası', name: 'Naftalanlı diş pastası', price: 5, income: 'APTEK', active: true },
-    { id: 'u8', group: 'Plastır', name: 'Naftalan plastırı', price: 4, income: 'APTEK', active: true },
-    { id: 'u9', group: 'Dərman Vasitələri', name: 'Fastumgel', price: 4, income: 'APTEK', active: true },
-    { id: 'u10', group: 'Dərman Vasitələri', name: 'Festal', price: 1.6, income: 'APTEK', active: true }
+    { id: 'u1', groupId: 'ug1', name: 'Ağ neft 100 ml korobka', price: 15, income: 'APTEK', active: true },
+    { id: 'u2', groupId: 'ug1', name: 'Naftalan yağı 250 ml', price: 28, income: 'APTEK', active: true },
+    { id: 'u3', groupId: 'ug2', name: 'Naftalan kremi 50 ml', price: 12, income: 'APTEK', active: true },
+    { id: 'u4', groupId: 'ug2', name: 'Naftalan balzamı 30 ml', price: 9, income: 'APTEK', active: true },
+    { id: 'u5', groupId: 'ug3', name: 'Naftalan sabunu', price: 6, income: 'APTEK', active: true },
+    { id: 'u6', groupId: 'ug3', name: 'Naftalan şampunu 200 ml', price: 14, income: 'APTEK', active: true },
+    { id: 'u7', groupId: 'ug4', name: 'Naftalanlı diş pastası', price: 5, income: 'APTEK', active: true },
+    { id: 'u8', groupId: 'ug5', name: 'Naftalan plastırı', price: 4, income: 'APTEK', active: true },
+    { id: 'u9', groupId: 'ug6', name: 'Fastumgel', price: 4, income: 'APTEK', active: true },
+    { id: 'u10', groupId: 'ug6', name: 'Festal', price: 1.6, income: 'APTEK', active: true },
+    { id: 'u11', groupId: 'ug7', name: 'Naftalan kremi nümunə 10 ml', price: 3, income: 'APTEK', active: true },
+    { id: 'u12', groupId: 'ug7', name: 'Naftalan sabunu nümunə', price: 2, income: 'APTEK', active: true }
   ];
 
   // Paket Tanımları: satıldığında reçeteye eklenen hizmetler (paket içi = ücretsiz seans)
@@ -169,6 +194,8 @@
 
   return {
     config: config,
+    serviceGroups: serviceGroups,
+    productGroups: productGroups,
     products: products,
     packages: packages,
     members: members,

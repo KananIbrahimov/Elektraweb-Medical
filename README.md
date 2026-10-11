@@ -22,6 +22,8 @@ Bugünkü akış:
 4. Resepsiyon doktorun reçetesini görür. Ücretli hizmetler için misafirden onay alır ve hepsini odaya kapatır.
 5. **Planlama ekranı açılır. Bu adımı Elektraweb bugün otomatik yapamıyor.**
 
+Demoda adım 3 **Misafir Girişi (Toplu Satış)** ekranında, adım 4–5 **Rezervasyon Planlama** ekranında yapılır.
+
 Mevcut "Oto. Rezervasyon Oluşturucu" tek personel ve tek mekân seçtiriyor. Çakışma olunca yalnızca kırmızı ✕ gösteriyor, uygun bir saat önermiyor.
 Medical modülü her seans için şu **üç koşulun aynı anda** sağlandığı en erken saati otomatik bulur:
 
@@ -35,7 +37,7 @@ Medical modülü her seans için şu **üç koşulun aynı anda** sağlandığı
 
 | Ekran | Ne yapar |
 |-------|----------|
-| **Misafir Girişi** | En üstte misafir tipi seçilir: **Inhouse** (check-in yapmış, oda no ile), **Münferit** (dışarıdan gelen), **Üye** (üye kartı olan). Seçilen misafir tüm ekranlarda kullanılır. Yeni münferit veya üye girişinde standart lab formu otomatik açılır. |
+| **Misafir Girişi (Toplu Satış)** | Elektraweb Toplu Satış düzeni. En üstte misafir tipi: **Inhouse** (check-in yapmış, oda no ile), **Münferit** (dışarıdan gelen; yeni misafir buradan açılır), **Üye**. Doktor ortadaki katalogdan **hizmet, lab testi, paket ve ürünü** ekler, her satırı **ücretli / ücretsiz** işaretler. **Kaydet**: hizmetler reçeteye gider (ücreti plan kaydedilince adisyona yazılır); lab testleri doktor isteği olarak yeni lab formuna yazılır; paket ve ürünler adisyona yazılır (inhouse: odaya kapat). **Kaydet ve Ödeme Al**: ödeme tipi seçilerek kapatılır. |
 | **Rezervasyon Planlama** | *Oto. Planlama*: doktor reçetesi (adet, ücretli/ücretsiz) → **Otomatik Planla** → öneri → **Kaydet**. Ücretli seanslar için MEDICAL adisyonu açılır (inhouse ise odaya kapatılır). Yerleştirilemeyen seanslar gerekçesiyle gösterilir. *Rezervasyon Takvimi*: Elektraweb Spa takvimi düzeninde, görevli veya mekân sütunlarıyla; hazırlık süreleri ve öğle arası görünür. |
 | **Rezervasyon Listesi** | Kayıtlı tüm seanslar; filtrelenebilir (Ücretli / Ücretsiz sekmeleri). |
 | **Ürün Satışları** | Toplu Satış düzeninde ürün kataloğu ve sepet. APTEK adisyonu açar. |

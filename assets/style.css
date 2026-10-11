@@ -231,8 +231,31 @@ a.tab { text-decoration: none; }
 .barc i { position: absolute; inset: 0 auto 0 0; background: #8fb8e3; }
 .barc span { position: relative; font-size: 11.5px; padding: 0 6px; line-height: 18px; }
 
+/* TOPLU SATIŞ (Misafir Girişi) */
+.toplu { display: grid; grid-template-columns: 210px minmax(0, 1fr) 400px; gap: 12px; align-items: start; }
+.toplu .cat-list { max-height: calc(100vh - 290px); overflow-y: auto; position: sticky; top: 0; }
+.cat.c-blue { background: #90b8e2; } .cat.c-orange { background: #f2a461; } .cat.c-purple { background: #cdb3dd; }
+.cat[aria-pressed="true"] { outline: 2px solid var(--navy); outline-offset: -2px; }
+.etiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 10px; align-content: start; }
+.etile { background: var(--surface); border: 1px solid #d0d4da; border-radius: 4px; padding: 10px 10px 8px; display: grid; gap: 4px; }
+.etile b { font-weight: 500; font-size: 14.5px; min-height: 2.6em; }
+.etile span { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #555; }
+.etile svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
+.etile .btn { margin-top: 6px; width: 100%; border-radius: 2px; }
+.ts-right { display: grid; gap: 10px; min-width: 0; }
+.ts-right .grid { width: 100%; }
+.ts-right .grid td, .ts-right .grid th { padding-inline: 6px; }
+.ts-right .grid td:first-child { white-space: normal; }
+@media (max-width: 1300px) { .toplu { grid-template-columns: 190px minmax(0, 1fr); } .ts-right { grid-column: 1 / -1; } }
+.dt-title { font-weight: 700; color: var(--title); border-bottom: 1px solid #333; padding-bottom: 6px; font-size: 13.5px; }
+.gstrip { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--navy); padding: 8px 12px; margin-bottom: 12px; font-size: 13px; }
+.gstrip > b { font-size: 16px; font-weight: 500; color: var(--title); }
+.gstrip .btn { margin-left: auto; }
+.kind { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 0 5px; border-radius: 2px; color: #fff; vertical-align: 1px; }
+.k-hizmet { background: #5b7fc7; } .k-urun { background: #e08a3c; } .k-paket { background: #9a6fbf; } .k-lab { background: #d04f6c; }
+
 /* DAR EKRAN */
-@media (max-width: 1100px) { .cols { grid-template-columns: minmax(0, 1fr); } .shop { grid-template-columns: minmax(0, 1fr); } .sel-card { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1100px) { .cols { grid-template-columns: minmax(0, 1fr); } .shop, .toplu { grid-template-columns: minmax(0, 1fr); } .toplu .cat-list { position: static; max-height: 220px; } .sel-card { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) { .type-seg { grid-template-columns: minmax(0, 1fr); } .ts { border-right: 0; border-bottom: 1px solid var(--line); } }
 @media (max-width: 900px) {
   .app { grid-template-columns: minmax(0, 1fr); }

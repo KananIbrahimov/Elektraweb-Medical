@@ -53,15 +53,15 @@
   //   secondStaffRequired → Spa Rezervasyonunda 2. Görevli Zorunlu
   //   after / notSameDayWith / genderMatch / perDay → YENİ alanlar (Elektraweb'de yok)
   var procedures = [
-    { id: 'vanna', price: 25, name: 'Naftalan vannası', duration: 15, prepAfter: 10, rooms: ['V1', 'V2', 'V3', 'V4'] },
-    { id: 'palciq', price: 20, name: 'Palçıq aplikasiyası', duration: 20, prepAfter: 10, secondStaffRequired: true, rooms: ['L1', 'L2'], notSameDayWith: ['vanna'] },
-    { id: 'masaj', price: 30, name: 'Massaj', duration: 20, prepBefore: 5, rooms: ['M1', 'M2', 'M3'], after: [{ procedureId: 'vanna', minGap: 30 }] },
-    { id: 'elektroforez', price: 15, name: 'Elektroforez', duration: 15, rooms: ['E1', 'E2', 'E3', 'A1', 'A2'] },
-    { id: 'amplipuls', price: 15, name: 'Amplipuls', duration: 15, rooms: ['A1', 'A2'] },
-    { id: 'fonoforez', price: 15, name: 'Fonoforez', duration: 15, rooms: ['F1', 'F2'] },
-    { id: 'ingalyasiya', price: 10, name: 'İngalyasiya', duration: 12, rooms: ['I1', 'I2'] },
-    { id: 'ozon', price: 40, name: 'Ozonterapiya', duration: 20, prepBefore: 5, rooms: ['P1'] },
-    { id: 'hicame', price: 35, name: 'Hicamə', duration: 30, prepAfter: 10, rooms: ['H1'], genderMatch: true, notSameDayWith: ['vanna'] }
+    { id: 'vanna', group: 'Prosedurlar', price: 25, name: 'Naftalan vannası', duration: 15, prepAfter: 10, rooms: ['V1', 'V2', 'V3', 'V4'] },
+    { id: 'palciq', group: 'Prosedurlar', price: 20, name: 'Palçıq aplikasiyası', duration: 20, prepAfter: 10, secondStaffRequired: true, rooms: ['L1', 'L2'], notSameDayWith: ['vanna'] },
+    { id: 'masaj', group: 'Prosedurlar', price: 30, name: 'Massaj', duration: 20, prepBefore: 5, rooms: ['M1', 'M2', 'M3'], after: [{ procedureId: 'vanna', minGap: 30 }] },
+    { id: 'elektroforez', group: 'Prosedurlar', price: 15, name: 'Elektroforez', duration: 15, rooms: ['E1', 'E2', 'E3', 'A1', 'A2'] },
+    { id: 'amplipuls', group: 'Prosedurlar', price: 15, name: 'Amplipuls', duration: 15, rooms: ['A1', 'A2'] },
+    { id: 'fonoforez', group: 'Prosedurlar', price: 15, name: 'Fonoforez', duration: 15, rooms: ['F1', 'F2'] },
+    { id: 'ingalyasiya', group: 'Prosedurlar', price: 10, name: 'İngalyasiya', duration: 12, rooms: ['I1', 'I2'] },
+    { id: 'ozon', group: 'Prosedurlar', price: 40, name: 'Ozonterapiya', duration: 20, prepBefore: 5, rooms: ['P1'] },
+    { id: 'hicame', group: 'Prosedurlar', price: 35, name: 'Hicamə', duration: 30, prepAfter: 10, rooms: ['H1'], genderMatch: true, notSameDayWith: ['vanna'] }
   ];
 
   // Elektraweb: Tanımlar → Görevli Tanımları  (+ Hizmet-Görevli Eşleştirme = skills, Shift Tanımları = shift/daysOff)

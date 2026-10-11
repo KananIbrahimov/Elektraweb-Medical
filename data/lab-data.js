@@ -57,8 +57,10 @@
     ['lg8', 'HBsAg', 'S/CO', 0, 1],
     ['lg8', 'Anti-HCV', 'S/CO', 0, 1]
   ];
+  // Test fiyatları (AZN), grup bazında örnek
+  var PRICE = { lg1: 8, lg2: 10, lg3: 10, lg4: 12, lg5: 18, lg6: 6, lg7: 14, lg8: 12 };
   var tests = raw.map(function (r, i) {
-    return { id: 't' + (i + 1), groupId: r[0], name: r[1], unit: r[2], min: r[3], max: r[4], gender: r[5] || '' };
+    return { id: 't' + (i + 1), groupId: r[0], name: r[1], unit: r[2], min: r[3], max: r[4], gender: r[5] || '', price: PRICE[r[0]] || 10 };
   });
 
   // Kurgusal sonuç değerleri: aralık içinde, birkaç tanesi bilerek sınır dışı

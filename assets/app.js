@@ -739,7 +739,8 @@
       { k: 'name', label: 'Ad' }, { k: 'unit', label: 'Birim' },
       { k: 'min', label: 'Min Değer', cls: 'r num', text: function (t) { return fmtN(t.min, 2); } },
       { k: 'max', label: 'Max Değer', cls: 'r num', text: function (t) { return fmtN(t.max, 2); } },
-      { k: 'gender', label: 'Cinsiyeti', options: ['Erkek', 'Kadın'], text: function (t) { return t.gender ? GENDER[t.gender] : ''; } }] };
+      { k: 'gender', label: 'Cinsiyeti', options: ['Erkek', 'Kadın'], text: function (t) { return t.gender ? GENDER[t.gender] : ''; } },
+      { k: 'price', label: 'Fiyat (AZN)', cls: 'r num', text: function (t) { return fmtN(t.price || 0, 2); } }] };
     var tb = stdTools('lab-tanim', function () { editLabTest(null); }, editLabTest, function (id) {
       openConfirm('Test Sil', '“' + IX.lt[id].name + '” silinecek; formlardaki sonuç satırları da kaldırılacak.', function () {
         L.tests = L.tests.filter(function (t) { return t.id !== id; });
@@ -751,15 +752,15 @@
     bindToolbar('lab-tanim', tb); bindGrid(o);
   };
   function editLabTest(id) {
-    var t = id ? IX.lt[id] : { groupId: L.groups[0] && L.groups[0].id, name: '', unit: '', min: 0, max: 0, gender: '' };
+    var t = id ? IX.lt[id] : { groupId: L.groups[0] && L.groups[0].id, name: '', unit: '', min: 0, max: 0, gender: '', price: 10 };
     openForm({ title: 'Lab Test Tanımları', sub: id ? '#' + id : 'Yeni kayıt', values: t,
       rows: [[{ k: 'groupId', label: 'Grup', type: 'select', options: L.groups.map(function (g) { return { v: g.id, t: g.name }; }) }, { k: 'name', label: 'Ad', req: true }],
         [{ k: 'min', label: 'Min', type: 'number', step: 'any', req: true }, { k: 'max', label: 'Max', type: 'number', step: 'any', req: true }, { k: 'unit', label: 'Birim' },
-          { k: 'gender', label: 'Cinsiyet', type: 'select', options: [{ v: '', t: 'Hepsi' }, { v: 'M', t: 'Erkek' }, { v: 'F', t: 'Kadın' }] }]],
+          { k: 'gender', label: 'Cinsiyet', type: 'select', options: [{ v: '', t: 'Hepsi' }, { v: 'M', t: 'Erkek' }, { v: 'F', t: 'Kadın' }] }, { k: 'price', label: 'Fiyat (AZN)', type: 'number', step: 'any' }]],
       save: function (v) {
         if (v.max < v.min) return 'Max değer, min değerden küçük olamaz.';
         var x = id ? t : { id: newId('t') };
-        x.groupId = v.groupId; x.name = v.name; x.min = v.min; x.max = v.max; x.unit = v.unit; x.gender = v.gender;
+        x.groupId = v.groupId; x.name = v.name; x.min = v.min; x.max = v.max; x.unit = v.unit; x.gender = v.gender; x.price = v.price || 0;
         if (!id) L.tests.push(x);
         index(); render();
       } });
@@ -901,74 +902,210 @@
 
   VIEWS.giris = function () {
     var t = S.gType || 'inhouse';
-    var g = IX.g[S.guestId];
+    var T = S.ts || (S.ts = { cart: [], cat: 'hizmet', q: '', doctor: '', mn: '', nw: { name: '', gender: 'F', phone: '', from: TODAY, to: U.addDays(TODAY, 6) }, member: '', mFrom: TODAY, mTo: U.addDays(TODAY, 6) });
+    var doctors = D.staff.filter(function (s) { return /^Dr\./.test(s.name) && s.active !== false; });
+    if (!T.doctor && doctors[0]) T.doctor = doctors[0].name;
+
+    // misafir çözümü
+    var g = null;
+    if (t === 'inhouse') {
+      var ins = D.guests.filter(function (x) { return !x.background && (x.type || 'inhouse') === 'inhouse'; });
+      g = IX.g[S.guestId] && (IX.g[S.guestId].type || 'inhouse') === 'inhouse' ? IX.g[S.guestId] : ins[0];
+    } else if (t === 'munferit') {
+      g = T.mn ? IX.g[T.mn] : null;
+    } else {
+      g = D.guests.filter(function (x) { return x.memberId === T.member && x.checkIn === T.mFrom; })[0] || null;
+    }
+
+    // katalog
+    var cats = [
+      { k: 'hizmet', t: 'Tüm Hizmetler', cls: 'c-blue' }, { k: 'urun', t: 'Tüm Ürünler', cls: 'c-orange' }, { k: 'paket', t: 'Tüm Paketler', cls: 'c-purple' },
+      { k: 'lab', t: 'Laboratoriya Analizləri' }
+    ];
+    L.groups.forEach(function (lg) { cats.push({ k: 'lab:' + lg.id, t: 'Lab · ' + lg.name }); });
+    D.products.map(function (p) { return p.group; }).filter(function (x, i, a) { return a.indexOf(x) === i; }).forEach(function (gr) { cats.push({ k: 'urun:' + gr, t: gr }); });
+
+    function catalog() {
+      var items = [];
+      D.procedures.filter(function (p) { return p.active !== false; }).forEach(function (p) { items.push({ kind: 'hizmet', id: p.id, name: p.name, min: p.duration, price: p.price || 0, cat: 'hizmet' }); });
+      D.products.filter(function (p) { return p.active !== false; }).forEach(function (p) { items.push({ kind: 'urun', id: p.id, name: p.name, min: 0, price: p.price, cat: 'urun', sub: p.group }); });
+      D.packages.filter(function (k) { return k.active !== false; }).forEach(function (k) { items.push({ kind: 'paket', id: k.id, name: k.name, min: 0, price: k.price, cat: 'paket', days: k.days }); });
+      L.tests.forEach(function (lt) {
+        if (g && lt.gender && lt.gender !== g.gender) return;
+        items.push({ kind: 'lab', id: lt.id, name: 'LAB ' + lt.name, min: 0, price: lt.price || 0, cat: 'lab', sub: lt.groupId });
+      });
+      var q = T.q.toLocaleLowerCase('tr');
+      return items.filter(function (it) {
+        if (q) return it.name.toLocaleLowerCase('tr').indexOf(q) >= 0;
+        if (T.cat === it.cat) return true;
+        if (T.cat.indexOf('lab:') === 0) return it.kind === 'lab' && it.sub === T.cat.slice(4);
+        if (T.cat.indexOf('urun:') === 0) return it.kind === 'urun' && it.sub === T.cat.slice(5);
+        return false;
+      });
+    }
+    function itemOf(c) {
+      if (c.kind === 'hizmet') { var p = IX.p[c.id]; return p && { name: p.name, price: p.price || 0 }; }
+      if (c.kind === 'urun') { var u = IX.u[c.id]; return u && { name: u.name, price: u.price }; }
+      if (c.kind === 'paket') { var k = IX.k[c.id]; return k && { name: k.name, price: k.price }; }
+      var lt = IX.lt[c.id]; return lt && { name: 'LAB ' + lt.name, price: lt.price || 0 };
+    }
+    var KIND = { hizmet: 'Hizmet', urun: 'Ürün', paket: 'Paket', lab: 'Lab' };
+    T.cart = T.cart.filter(function (c) { return itemOf(c); });
+    var total = T.cart.reduce(function (n, c) { return n + (c.paid ? c.qty * itemOf(c).price : 0); }, 0);
+
     var seg = '<div class="type-seg" role="tablist" aria-label="Misafir tipi">' + ['inhouse', 'munferit', 'uye'].map(function (k) {
       var sub = { inhouse: 'Otelde konaklayan misafir', munferit: 'Dışarıdan gelen, konaklamayan', uye: 'Üyelik kartı olan misafir' }[k];
       return '<button type="button" role="tab" class="ts" aria-selected="' + (k === t) + '" data-k="' + k + '"><b>' + GTYPE[k] + '</b><small>' + sub + '</small></button>';
     }).join('') + '</div>';
 
-    var cur = '';
+    var strip = '';
     if (g) {
       var st = guestStatus(g);
-      cur = '<section class="card sel-card" aria-label="Seçili misafir"><div class="sel-main"><div class="eyebrow">Seçili misafir · ' + GTYPE[g.type || 'inhouse'] + '</div><div class="sel-name">' + esc(g.name) + '</div>' +
-        '<div class="hint" style="margin:0">' + (g.room ? 'Oda ' + esc(g.room) + ' · ' : '') + fmtD(g.checkIn) + ' – ' + fmtD(g.treatEnd || g.checkOut) + ' · ' + GENDER[g.gender] +
-        ' · Lab: ' + esc(st.lab) + (st.out ? ' (' + st.out + ' sınır dışı)' : '') + ' · Reçete: ' + st.rx + ' seans · Plan: ' + (st.plan ? st.plan + ' seans kayıtlı' : 'yapılmadı') + '</div></div>' +
-        '<div class="btns"><a class="btn" href="#planlama">Rezervasyon Planla</a><a class="btn gray" href="#lab-sonuc">Lab Sonuçları</a><a class="btn gray" href="#urun">Ürün Sat</a><a class="btn gray" href="#paket">Paket Sat</a></div></section>';
+      strip = '<div class="gstrip"><b>' + esc(g.name) + '</b><span>' + GTYPE[g.type || 'inhouse'] + (g.room ? ' · Oda ' + esc(g.room) : '') + ' · ' + fmtD(g.checkIn) + ' – ' + fmtD(g.treatEnd || g.checkOut) + ' · ' + GENDER[g.gender] + '</span>' +
+        '<span>Lab: ' + esc(st.lab) + (st.out ? ' <b style="color:#c62828">(' + st.out + ' sınır dışı)</b>' : '') + ' · Reçete: ' + st.rx + ' seans · Plan: ' + (st.plan ? st.plan + ' seans kayıtlı' : 'yapılmadı') + '</span>' +
+        '<a class="btn sm" href="#planlama">Rezervasyon Planla</a></div>';
     }
 
-    var body = '';
+    // sağ panel: misafir alanları
+    var gf = '';
     if (t === 'inhouse') {
-      var rows = D.guests.filter(function (x) { return !x.background && (x.type || 'inhouse') === 'inhouse'; });
-      var o = { id: 'giris-in', rows: rows, open: function (id) { selectGuest(id, '#planlama'); }, rowClass: function (r) { return r.id === S.guestId ? 'sel' : ''; }, cols: [
-        { k: 'room', label: 'Oda No', cls: 'num' }, { k: 'name', label: 'Misafir Adı' }, { k: 'gender', label: 'Cinsiyet', text: function (r) { return GENDER[r.gender]; }, options: ['Erkek', 'Kadın'] },
-        { k: 'in', label: 'Giriş', cls: 'num', text: function (r) { return fmtD(r.checkIn); } }, { k: 'out', label: 'Çıkış', cls: 'num', text: function (r) { return fmtD(r.checkOut); } },
-        { k: 'lab', label: 'Lab Durumu', text: function (r) { return guestStatus(r).lab; }, options: L.statuses },
-        { k: 'rx', label: 'Reçete (seans)', cls: 'r num', text: function (r) { return guestStatus(r).rx; } },
-        { k: 'plan', label: 'Plan', text: function (r) { return guestStatus(r).plan ? 'Planlandı' : 'Bekliyor'; }, options: ['Planlandı', 'Bekliyor'] }] };
-      var tb = [{ icon: 'check', title: 'Seçili misafiri seç', run: function () { var k = requireSel('giris-in', 'misafir'); if (k) selectGuest(k); } },
-        { icon: 'clear', title: 'Filtreleri temizle', run: function () { S.filters['giris-in'] = {}; render(); } }];
-      body = '<p class="hint" style="margin:0 0 6px">Check-in yapmış misafirler isim ve oda numarasıyla otomatik gelir. Satıra tıklayıp ✓ ile seçin; çift tıklama seçip planlamaya geçer.</p>' + toolbar('giris-in', tb, rows.length) + grid(o);
-      content.innerHTML = pageHead('Misafir Girişi') + seg + cur + body;
-      bindToolbar('giris-in', tb); bindGrid(o);
+      gf = '<div class="fld ro"><span>Misafir Tipi</span><output>Otel Misafiri</output></div>' +
+        '<label class="fld" for="tsGuest"><span>Konaklayan Misafir</span><select id="tsGuest">' + D.guests.filter(function (x) { return !x.background && (x.type || 'inhouse') === 'inhouse'; }).map(function (x) {
+          return '<option value="' + x.id + '"' + (g && x.id === g.id ? ' selected' : '') + '>' + esc(gLabel(x)) + '</option>'; }).join('') + '</select></label>';
     } else if (t === 'munferit') {
-      var list = D.guests.filter(function (x) { return x.type === 'munferit'; });
-      var o2 = { id: 'giris-mn', rows: list, open: function (id) { selectGuest(id, '#planlama'); }, cols: [
-        { k: 'name', label: 'Ad Soyad' }, { k: 'gender', label: 'Cinsiyet', text: function (r) { return GENDER[r.gender]; } }, { k: 'phone', label: 'Telefon' },
-        { k: 'from', label: 'Tedavi Başlangıç', cls: 'num', text: function (r) { return fmtD(r.checkIn); } }, { k: 'to', label: 'Tedavi Bitiş', cls: 'num', text: function (r) { return fmtD(r.treatEnd); } }] };
-      body = '<section class="card" style="max-width:880px"><h3>Yeni Münferit Misafir</h3><div class="frow">' +
-        pf('mnName', 'Ad Soyad *', 'text', '') + '<label class="fld" for="mnGender"><span>Cinsiyet *</span><select id="mnGender"><option value="F">Kadın</option><option value="M">Erkek</option></select></label>' + pf('mnPhone', 'Telefon', 'tel', '') + '</div>' +
-        '<div class="frow">' + pf('mnFrom', 'Tedavi Başlangıç *', 'date', TODAY) + pf('mnTo', 'Tedavi Bitiş *', 'date', U.addDays(TODAY, 6)) + '</div><div class="err" id="mnErr" role="alert"></div>' +
-        '<div class="btns"><button type="button" class="btn" id="mnSave">Kaydet ve Seç</button></div></section>' +
-        '<h3 class="sub-title">Kayıtlı Münferit Misafirler</h3>' + grid(o2);
-      content.innerHTML = pageHead('Misafir Girişi') + seg + cur + body;
-      bindGrid(o2);
-      $('mnSave').addEventListener('click', function () {
-        var v = { name: $('mnName').value.trim(), gender: $('mnGender').value, phone: $('mnPhone').value.trim(), from: $('mnFrom').value, to: $('mnTo').value };
-        if (!v.name) { $('mnErr').textContent = 'Ad soyad girin.'; return; }
-        if (!v.from || !v.to || v.to < v.from) { $('mnErr').textContent = 'Tedavi bitişi, başlangıçtan önce olamaz.'; return; }
-        var ng = createGuest({ type: 'munferit', name: v.name, gender: v.gender, phone: v.phone, from: v.from, to: v.to });
-        selectGuest(ng.id); toast(ng.name + ' kaydedildi ve seçildi. Standart lab formu açıldı.');
-      });
+      var mns = D.guests.filter(function (x) { return x.type === 'munferit'; });
+      gf = '<label class="fld" for="tsMn"><span>Münferit Misafir</span><select id="tsMn"><option value="">+ Yeni münferit misafir</option>' +
+        mns.map(function (x) { return '<option value="' + x.id + '"' + (x.id === T.mn ? ' selected' : '') + '>' + esc(x.name) + ' (' + fmtD(x.checkIn) + ')</option>'; }).join('') + '</select></label>';
+      if (!T.mn) gf += pf('nwName', 'Ad Soyad *', 'text', T.nw.name) +
+        '<div class="frow"><label class="fld" for="nwGender"><span>Cinsiyet *</span><select id="nwGender"><option value="F"' + (T.nw.gender === 'F' ? ' selected' : '') + '>Kadın</option><option value="M"' + (T.nw.gender === 'M' ? ' selected' : '') + '>Erkek</option></select></label>' + pf('nwPhone', 'Telefon', 'tel', T.nw.phone) + '</div>' +
+        '<div class="frow">' + pf('nwFrom', 'Tedavi Başlangıç *', 'date', T.nw.from) + pf('nwTo', 'Tedavi Bitiş *', 'date', T.nw.to) + '</div>';
     } else {
-      var mem = D.members.filter(function (m) { return m.active !== false; });
-      var o3 = { id: 'giris-uye', rows: mem, open: function (id) { pickMember(id); }, cols: [
-        { k: 'card', label: 'Kart No', cls: 'num' }, { k: 'name', label: 'Ad Soyad' }, { k: 'gender', label: 'Cinsiyet', text: function (r) { return GENDER[r.gender]; } }, { k: 'phone', label: 'Telefon' },
-        { k: 'visits', label: 'Kayıtlı Ziyaret', cls: 'r num', text: function (r) { return D.guests.filter(function (x) { return x.memberId === r.id; }).length; } }] };
-      body = '<section class="card" style="max-width:880px"><div class="frow">' + pf('uyFrom', 'Tedavi Başlangıç', 'date', TODAY) + pf('uyTo', 'Tedavi Bitiş', 'date', U.addDays(TODAY, 6)) +
-        '</div><div class="err" id="uyErr" role="alert"></div><div class="btns"><button type="button" class="btn" id="uySel">Seçili Üyeyi Misafir Olarak Seç</button><a class="btn gray" href="#uye">Üye Tanımları</a></div></section>' +
-        '<p class="hint" style="margin:8px 0 6px">Üyeyi listeden seçin (satıra tıklayın) ve tedavi tarihlerini girin. Çift tıklama da seçer.</p>' + grid(o3);
-      content.innerHTML = pageHead('Misafir Girişi') + seg + cur + body;
-      bindGrid(o3);
-      $('uySel').addEventListener('click', function () { var k = requireSel('giris-uye', 'üye'); if (k) pickMember(k); });
+      gf = '<label class="fld" for="tsMem"><span>Üye</span><select id="tsMem"><option value="">— Üye seçin —</option>' +
+        D.members.filter(function (m) { return m.active !== false; }).map(function (m) { return '<option value="' + m.id + '"' + (m.id === T.member ? ' selected' : '') + '>' + esc(m.card + ' · ' + m.name) + '</option>'; }).join('') + '</select></label>' +
+        '<div class="frow">' + pf('mFrom', 'Tedavi Başlangıç', 'date', T.mFrom) + pf('mTo', 'Tedavi Bitiş', 'date', T.mTo) + '</div>';
     }
-    function pickMember(mid) {
-      var m = IX.m[mid], from = $('uyFrom').value, to = $('uyTo').value;
-      if (!from || !to || to < from) { $('uyErr').textContent = 'Tedavi tarihlerini doğru girin.'; return; }
-      var ex = D.guests.filter(function (x) { return x.memberId === mid && x.checkIn === from; })[0];
-      var ng = ex || createGuest({ type: 'uye', name: m.name, gender: m.gender, phone: m.phone, from: from, to: to, memberId: mid });
-      selectGuest(ng.id);
-    }
+    gf += '<div class="fld ro"><span>Gelir Departmanı</span><output>MEDICAL</output></div>' +
+      '<label class="fld" for="tsDr"><span>İsteyen Doktor</span><select id="tsDr">' + doctors.map(function (d) { return '<option' + (d.name === T.doctor ? ' selected' : '') + '>' + esc(d.name) + '</option>'; }).join('') + '</select></label>';
+
+    var tiles = catalog().map(function (it) {
+      var inCart = T.cart.some(function (c) { return c.kind === it.kind && c.id === it.id; });
+      return '<div class="etile"><b>' + esc(it.name) + '</b>' +
+        '<span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>' + (it.kind === 'paket' ? it.days + ' gün' : it.min + 'min') + '</span>' +
+        '<span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="10" rx="1"/><circle cx="12" cy="12" r="2"/></svg>' + fmtN(it.price, it.price % 1 ? 2 : 0) + ' AZN</span>' +
+        '<button type="button" class="btn red" data-kind="' + it.kind + '" data-id="' + it.id + '">' + (inCart ? 'Ekle (+1)' : 'Ekle') + '</button></div>';
+    }).join('') || '<p class="hint" style="grid-column:1/-1">Bu kategoride kayıt yok.</p>';
+
+    var cartRows = T.cart.length ? T.cart.map(function (c, i) {
+      var it = itemOf(c);
+      return '<tr><td><span class="kind k-' + c.kind + '">' + KIND[c.kind] + '</span> ' + esc(it.name) + '</td>' +
+        '<td class="c">' + (c.kind === 'lab' || c.kind === 'paket' ? '<span class="num">1</span>' : '<input type="number" min="1" max="30" value="' + c.qty + '" data-i="' + i + '" id="tq-' + i + '" aria-label="Miktar" style="width:44px;text-align:center">') + '</td>' +
+        '<td class="c"><button type="button" class="pill ' + (c.paid ? 'paid' : 'free') + '" data-paid="' + i + '" title="Ücretli / ücretsiz">' + (c.paid ? 'Ücretli' : 'Ücretsiz') + '</button></td>' +
+        '<td class="r num">' + fmtN(c.paid ? c.qty * it.price : 0, 2) + '</td>' +
+        '<td><button type="button" class="tool del" data-del="' + i + '" aria-label="Kaldır" style="width:24px;height:22px">' + svg('trash') + '</button></td></tr>';
+    }).join('') : '<tr class="empty-row"><td colspan="5">Ortadan hizmet, lab, paket veya ürün ekleyin</td></tr>';
+
+    var right = '<div class="ts-right">' +
+      '<section class="card"><div class="dt-title">#Planlama Başlangıcı#</div><div class="frow" style="grid-template-columns:minmax(0,1fr) auto;align-items:end">' +
+      pf('tsFrom', 'Servis Günü', 'date', S.fromDate || (g ? g.checkIn : TODAY)) + '<button type="button" class="btn" id="tsFromReset" aria-label="Giriş tarihine dön" title="Giriş tarihine dön" style="padding:9px 16px">↻</button></div></section>' +
+      '<section class="card"><div class="frow" style="grid-template-columns:minmax(0,1fr) auto;align-items:center"><label class="fld" for="tsQ"><span>Hizmet Ara</span><input id="tsQ" value="' + esc(T.q) + '"></label><button type="button" class="ico x" id="tsQx" aria-label="Aramayı temizle">✕</button></div></section>' +
+      '<section class="card">' + gf + '</section>' +
+      '<section class="card" style="padding:0;gap:0"><div class="grid-wrap" style="border:0;max-height:300px"><table class="grid"><thead><tr><th>Hizmet Adı</th><th class="c">Miktar</th><th class="c">Ücret</th><th class="r">Toplam (AZN)</th><th></th></tr></thead><tbody id="tsCart">' + cartRows + '</tbody></table></div>' +
+      '<div class="sum" style="justify-content:space-between;padding:10px 12px;border-top:1px solid var(--line)"><b style="font-size:13px;margin:0">Toplam:</b><b class="num" style="margin:0">' + money(total) + '</b></div></section>' +
+      '<div class="err" id="tsErr" role="alert"></div>' +
+      '<div class="btns" style="display:grid;grid-template-columns:1fr 1fr"><button type="button" class="btn" id="tsSave"' + (T.cart.length ? '' : ' disabled') + '>Kaydet</button><button type="button" class="btn cancel" id="tsPay"' + (T.cart.length && total > 0 ? '' : ' disabled') + '>Kaydet ve Ödeme Al</button></div>' +
+      '<p class="hint" style="margin:0">Hizmetler misafirin reçetesine eklenir, ücreti plan kaydedilince adisyona yazılır. Lab testleri yeni lab formuna, paket ve ürünler hemen adisyona yazılır.</p></div>';
+
+    content.innerHTML = pageHead('Toplu Satış') + seg + strip + '<div class="toplu">' +
+      '<div class="cat-list">' + cats.map(function (c) { return '<button type="button" class="cat ' + (c.cls || '') + '" data-c="' + esc(c.k) + '"' + (T.cat === c.k && !T.q ? ' aria-pressed="true"' : '') + '>' + esc(c.t) + '</button>'; }).join('') + '</div>' +
+      '<div class="etiles">' + tiles + '</div>' + right + '</div>';
+
+    // olaylar
     [].forEach.call(content.querySelectorAll('.ts'), function (b) { b.addEventListener('click', function () { S.gType = b.dataset.k; render(); }); });
+    content.querySelector('.cat-list').addEventListener('click', function (e) { var b = e.target.closest('[data-c]'); if (b) { T.cat = b.dataset.c; T.q = ''; render(); } });
+    content.querySelector('.etiles').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-kind]'); if (!b) return;
+      var ex = T.cart.filter(function (c) { return c.kind === b.dataset.kind && c.id === b.dataset.id; })[0];
+      if (ex) { if (ex.kind === 'hizmet' || ex.kind === 'urun') ex.qty++; else toast('Bu kalem sepette zaten var.'); }
+      else T.cart.push({ kind: b.dataset.kind, id: b.dataset.id, qty: 1, paid: true });
+      render();
+    });
+    var tsQ = $('tsQ');
+    tsQ.addEventListener('input', function () { T.q = tsQ.value; var pos = tsQ.selectionStart; render(); var n = $('tsQ'); n.focus(); n.setSelectionRange(pos, pos); });
+    $('tsQx').addEventListener('click', function () { T.q = ''; render(); });
+    $('tsCart').addEventListener('change', function (e) { var i = e.target.dataset.i; if (i == null) return; T.cart[i].qty = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 1)); render(); });
+    $('tsCart').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.paid != null) T.cart[b.dataset.paid].paid = !T.cart[b.dataset.paid].paid;
+      else if (b.dataset.del != null) T.cart.splice(+b.dataset.del, 1);
+      else return;
+      render();
+    });
+    $('tsFrom').addEventListener('change', function (e) { S.fromDate = e.target.value; S.proposal = null; });
+    $('tsFromReset').addEventListener('click', function () { S.fromDate = null; render(); });
+    $('tsDr').addEventListener('change', function (e) { T.doctor = e.target.value; });
+    if ($('tsGuest')) $('tsGuest').addEventListener('change', function (e) { S.guestId = e.target.value; S.calGuest = S.guestId; S.proposal = null; S.fromDate = null; render(); });
+    if ($('tsMn')) $('tsMn').addEventListener('change', function (e) { T.mn = e.target.value; if (T.mn) { S.guestId = T.mn; S.calGuest = T.mn; } render(); });
+    ['nwName', 'nwPhone', 'nwFrom', 'nwTo', 'nwGender'].forEach(function (id) {
+      if ($(id)) $(id).addEventListener('change', function (e) { T.nw[{ nwName: 'name', nwPhone: 'phone', nwFrom: 'from', nwTo: 'to', nwGender: 'gender' }[id]] = e.target.value; if (id === 'nwGender') render(); });
+    });
+    if ($('tsMem')) $('tsMem').addEventListener('change', function (e) { T.member = e.target.value; render(); });
+    if ($('mFrom')) $('mFrom').addEventListener('change', function (e) { T.mFrom = e.target.value; render(); });
+    if ($('mTo')) $('mTo').addEventListener('change', function (e) { T.mTo = e.target.value; });
+
+    function resolveGuest() {
+      if (t === 'inhouse') return g;
+      if (t === 'munferit') {
+        if (T.mn) return IX.g[T.mn];
+        var nw = { name: ($('nwName').value || '').trim(), gender: $('nwGender').value, phone: ($('nwPhone').value || '').trim(), from: $('nwFrom').value, to: $('nwTo').value };
+        if (!nw.name) { $('tsErr').textContent = 'Münferit misafirin adını girin.'; return null; }
+        if (!nw.from || !nw.to || nw.to < nw.from) { $('tsErr').textContent = 'Tedavi bitişi, başlangıçtan önce olamaz.'; return null; }
+        var ng = createGuest({ type: 'munferit', name: nw.name, gender: nw.gender, phone: nw.phone, from: nw.from, to: nw.to });
+        T.mn = ng.id; T.nw = { name: '', gender: 'F', phone: '', from: TODAY, to: U.addDays(TODAY, 6) };
+        return ng;
+      }
+      if (!T.member) { $('tsErr').textContent = 'Üye seçin.'; return null; }
+      var mf = $('mFrom').value, mt = $('mTo').value;
+      if (!mf || !mt || mt < mf) { $('tsErr').textContent = 'Tedavi tarihlerini doğru girin.'; return null; }
+      if (g) return g;
+      var m = IX.m[T.member];
+      return createGuest({ type: 'uye', name: m.name, gender: m.gender, phone: m.phone, from: mf, to: mt, memberId: m.id });
+    }
+
+    function save(payment) {
+      var gg = resolveGuest(); if (!gg) return;
+      var rx = S.rx[gg.id] || (S.rx[gg.id] = []);
+      var med = [], apt = [], labTests = [], nH = 0;
+      function addRx(pid, count, paid) {
+        var ex = rx.filter(function (x) { return x.procedureId === pid && !!x.paid === !!paid; })[0];
+        if (ex) ex.count += count; else rx.push({ procedureId: pid, count: count, paid: !!paid });
+      }
+      T.cart.forEach(function (c) {
+        var it = itemOf(c), price = c.paid ? it.price : 0;
+        if (c.kind === 'hizmet') { addRx(c.id, c.qty, c.paid); nH += c.qty; }
+        else if (c.kind === 'paket') { IX.k[c.id].items.forEach(function (x) { addRx(x.procedureId, x.count, false); nH += x.count; }); med.push({ name: 'Paket: ' + it.name, qty: 1, price: price }); }
+        else if (c.kind === 'lab') { labTests.push(c.id); med.push({ name: it.name, qty: 1, price: price }); }
+        else apt.push({ name: it.name, qty: c.qty, price: price });
+      });
+      if (labTests.length) L.forms.push({ id: newId('f'), date: S.fromDate || gg.checkIn, created: TODAY + ' 10:00', guestId: gg.id, doctor: T.doctor, status: 'Yeni', notes: 'Doktor isteği',
+        lines: labTests.map(function (id) { return { testId: id, value: '', note: '' }; }) });
+      var pay = payment || (gg.type === 'inhouse' ? 'Odaya Kapat' : 'Ödeme Bekliyor');
+      var ads = [];
+      if (med.length) ads.push(newAdisyon(gg.id, 'MEDICAL', 'Toplu Satış', med, pay));
+      if (apt.length) ads.push(newAdisyon(gg.id, 'APTEK', 'Toplu Satış', apt, pay));
+      T.cart = []; S.guestId = gg.id; S.calGuest = gg.id; S.proposal = null;
+      var locked = guestBookings(gg.id).length > 0;
+      render();
+      toast('Kaydedildi: ' + gg.name + '. ' + (nH ? nH + ' seans reçeteye eklendi' + (locked ? ' (kayıtlı plan var, yeniden planlamak için önce iptal edin)' : '') + '. ' : '') +
+        (labTests.length ? labTests.length + ' lab testi forma yazıldı. ' : '') + (ads.length ? ads.map(function (a) { return a.no; }).join(', ') + ' adisyon (' + pay + ').' : ''));
+    }
+    $('tsSave').addEventListener('click', function () { save(); });
+    $('tsPay').addEventListener('click', function () {
+      var gg = g;
+      var opts = (gg && gg.type === 'inhouse' ? ['Odaya Kapat'] : []).concat(['Nakit', 'Kredi Kartı']);
+      openForm({ title: 'Ödeme Al', sub: 'Toplam ' + money(total), values: { pay: opts[0] },
+        rows: [[{ k: 'pay', label: 'Ödeme Tipi', type: 'select', options: opts.map(function (o) { return { v: o, t: o }; }) }]],
+        save: function (v) { save(v.pay); } });
+    });
   };
 
   // ---------- Ürün Satışları ----------
@@ -1062,8 +1199,8 @@
     var sum = rows.filter(function (r) { return !r.cancelled; }).reduce(function (n, r) { return n + r.total; }, 0);
     var o = { id: 'adisyon', rows: rows, open: openAdisyon, rowClass: function (r) { return r.cancelled ? 'muted-row' : ''; }, cols: [
       { k: 'no', label: 'Adisyon No', cls: 'num' }, { k: 'date', label: 'Adisyon Tarihi', cls: 'num' }, { k: 'type', label: 'Adisyon Türleri', options: ['SOLD', 'CANCELLED'] },
-      { k: 'dept', label: 'Departman Adı', options: ['MEDICAL', 'APTEK'] }, { k: 'kind', label: 'İçerik', options: ['Hizmet', 'Ürün', 'Paket'] },
-      { k: 'guest', label: 'Misafir Adı' }, { k: 'room', label: 'Oda' }, { k: 'pay', label: 'Ödeme', options: ['Odaya Kapat', 'Nakit', 'Kredi Kartı'] },
+      { k: 'dept', label: 'Departman Adı', options: ['MEDICAL', 'APTEK'] }, { k: 'kind', label: 'İçerik', options: ['Hizmet', 'Ürün', 'Paket', 'Toplu Satış'] },
+      { k: 'guest', label: 'Misafir Adı' }, { k: 'room', label: 'Oda' }, { k: 'pay', label: 'Ödeme', options: ['Odaya Kapat', 'Nakit', 'Kredi Kartı', 'Ödeme Bekliyor'] },
       { k: 'total', label: 'Adisyon Toplam', cls: 'r num', text: function (r) { return fmtN(r.total, 2); } }, { k: 'cur', label: 'Döviz', text: function () { return 'AZN'; }, filter: false }] };
     var tb = [{ icon: 'edit', title: 'Detay (satıra çift tıklama da açar)', run: function () { var k = requireSel('adisyon', 'adisyon'); if (k) openAdisyon(k); } },
       { icon: 'trash', title: 'Adisyonu iptal et', run: function () {

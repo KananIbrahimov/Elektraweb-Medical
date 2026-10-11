@@ -237,7 +237,8 @@ a.tab { text-decoration: none; }
 .toplu .cat-list { max-height: calc(100vh - 290px); overflow-y: auto; position: sticky; top: 0; }
 .cat.c-blue { background: #90b8e2; } .cat.c-orange { background: #f2a461; } .cat.c-purple { background: #cdb3dd; } .cat.c-pink { background: #eea7b7; }
 .cat[data-tg] { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
-.cat.sub1 { margin-left: 10px; font-weight: 700; font-size: 13px; border-left: 4px solid #2e7d32; }
+.cat.sub1 { margin-left: 10px; font-weight: 700; font-size: 13px; border-left: 4px solid #2e7d32; display: flex; justify-content: space-between; gap: 6px; }
+.cat.sub1 .chev { font-weight: 400; font-size: 11.5px; color: #666; white-space: nowrap; }
 .cat.sub1.paid { border-left-color: #c25700; }
 .cat.sub2 { margin-left: 22px; font-weight: 400; font-size: 13px; padding: 7px 12px; }
 .tg-grp { color: var(--muted); font-size: 11.5px; }

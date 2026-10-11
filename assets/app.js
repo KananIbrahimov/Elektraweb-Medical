@@ -965,10 +965,17 @@
       var h = TREE.map(function (n) {
         var open = !!T.open[n.k];
         var out = '<button type="button" class="cat ' + n.cls + '" data-tg="' + n.k + '" aria-expanded="' + open + '">' + esc(n.t) + '<span class="chev">' + (open ? '▾' : '▸') + '</span></button>';
+        // seçili ana grup: "k:1" / "k:0" ya da o ana grubun içindeki bir grup "k:g:id"
+        var cp = T.cat.split(':'), activeAna = null;
+        if (cp[0] === n.k) {
+          if (cp[1] === '1' || cp[1] === '0') activeAna = cp[1] === '1';
+          else if (cp[1] === 'g') { var sg = n.groups.filter(function (x) { return x.id === cp[2]; })[0]; if (sg) activeAna = !!sg.paid; }
+        }
         if (open) [true, false].forEach(function (pd) {
-          var key = n.k + ':' + (pd ? '1' : '0');
-          out += '<button type="button" class="cat sub1' + (pd ? ' paid' : ' free') + '" data-c="' + key + '"' + (T.cat === key && !T.q ? ' aria-pressed="true"' : '') + '>' + esc(anaOf(n.k, pd)) + '</button>';
-          n.groups.filter(function (gr) { return !!gr.paid === pd; }).forEach(function (gr) {
+          var key = n.k + ':' + (pd ? '1' : '0'), isOpen = activeAna === pd;
+          var cnt = n.groups.filter(function (gr) { return !!gr.paid === pd; }).length;
+          out += '<button type="button" class="cat sub1' + (pd ? ' paid' : ' free') + '" data-c="' + key + '" aria-expanded="' + isOpen + '"' + (T.cat === key && !T.q ? ' aria-pressed="true"' : '') + '>' + esc(anaOf(n.k, pd)) + '<span class="chev">' + cnt + ' grup ' + (isOpen ? '▾' : '▸') + '</span></button>';
+          if (isOpen) n.groups.filter(function (gr) { return !!gr.paid === pd; }).forEach(function (gr) {
             var gk = n.k + ':g:' + gr.id;
             out += '<button type="button" class="cat sub2" data-c="' + gk + '"' + (T.cat === gk && !T.q ? ' aria-pressed="true"' : '') + '>' + esc(gr.name) + '</button>';
           });
@@ -1058,7 +1065,7 @@
     [].forEach.call(content.querySelectorAll('.ts'), function (b) { b.addEventListener('click', function () { S.gType = b.dataset.k; render(); }); });
     content.querySelector('.cat-list').addEventListener('click', function (e) {
       var tg = e.target.closest('[data-tg]');
-      if (tg) { var k = tg.dataset.tg; T.open[k] = !T.open[k]; if (T.open[k]) { T.cat = k + ':1'; T.q = ''; } render(); return; }
+      if (tg) { var k = tg.dataset.tg; T.open[k] = !T.open[k]; render(); return; }
       var b = e.target.closest('[data-c]'); if (b) { T.cat = b.dataset.c; T.q = ''; render(); }
     });
     content.querySelector('.etiles').addEventListener('click', function (e) {

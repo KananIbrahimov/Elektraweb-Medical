@@ -55,6 +55,13 @@ button { font: inherit; color: inherit; }
 /* İçerik */
 .content { overflow: auto; padding-inline: 16px; padding-block: 12px 32px; min-width: 0; }
 .page-title { font-size: 30px; font-weight: 500; color: var(--title); margin: 4px 0 10px; text-wrap: balance; }
+/* Sekmeler (Elektraweb: Bekleyen / Bitmiş / Hepsi düzeni) */
+.tabs { display: flex; background: #e4e7ec; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab { border: 0; background: none; padding: 10px 34px; font-weight: 500; font-size: 15px; color: #555; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; }
+.tab:hover { color: var(--title); }
+.tab[aria-selected="true"] { background: var(--surface); color: var(--title); border-bottom-color: var(--title); }
+.tab-panel { background: var(--surface); border: 1px solid var(--line); border-top: 0; padding: 12px; }
+.tab-panel .empty { border-style: dashed; }
 .empty { background: var(--surface); border: 1px dashed #c3c8d1; padding: 40px 16px; text-align: center; color: var(--muted); font-size: 14px; }
 
 @media (max-width: 900px) {

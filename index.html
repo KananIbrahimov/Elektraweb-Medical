@@ -109,7 +109,10 @@
       if (a.getAttribute('href') === '#' + key) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
     var title = MAIN[key] || PAGES[key];
-    if (title) {
+    if (key === 'misafirler') {
+      toggle('medicalBtn', 'medicalList', true);
+      renderMisafirler();
+    } else if (title) {
       toggle('medicalBtn', 'medicalList', true);
       if (PAGES[key]) toggle('tanimlarBtn', 'tanimlarList', true);
       content.innerHTML = '<h1 class="page-title">' + title + '</h1><div class="empty">Bu ekranın alanları henüz belirlenmedi.</div>';
@@ -118,6 +121,21 @@
     }
     app.classList.remove('menu-open');
   }
+  // Misafirler: üstte Münferit / Konaklayan / Üye sekmeleri
+  var misafirTab = 'munferit';
+  var MISAFIR_TABS = [['munferit', 'Münferit'], ['konaklayan', 'Konaklayan'], ['uye', 'Üye']];
+  function renderMisafirler() {
+    content.innerHTML = '<h1 class="page-title">Misafirler</h1>' +
+      '<div class="tabs" role="tablist" aria-label="Misafir tipi">' + MISAFIR_TABS.map(function (t) {
+        return '<button type="button" role="tab" class="tab" data-t="' + t[0] + '" aria-selected="' + (t[0] === misafirTab) + '">' + t[1] + '</button>';
+      }).join('') + '</div>' +
+      '<div class="tab-panel" role="tabpanel"><div class="empty">' + MISAFIR_TABS.filter(function (t) { return t[0] === misafirTab; })[0][1] + ' bölümünün alanları henüz belirlenmedi.</div></div>';
+    content.querySelector('.tabs').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-t]'); if (!b) return;
+      misafirTab = b.dataset.t; renderMisafirler();
+    });
+  }
+
   window.addEventListener('hashchange', render);
   document.getElementById('hamburger').addEventListener('click', function () { app.classList.toggle('menu-open'); });
   document.getElementById('scrim').addEventListener('click', function () { app.classList.remove('menu-open'); });

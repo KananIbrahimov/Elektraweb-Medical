@@ -45,6 +45,7 @@ button { font: inherit; color: inherit; }
 .grp-btn[aria-expanded="false"] .chev { transform: rotate(180deg); }
 .grp-btn.sub { padding-left: 26px; font-weight: 700; font-size: 13.5px; }
 .menu a.item { display: block; padding: 8px 14px 8px 40px; color: var(--side-fg); text-decoration: none; border-bottom: 1px solid var(--side-2); border-left: 3px solid var(--side-active); }
+.menu a.item.lvl1 { padding-left: 26px; }
 .menu a.item:hover { background: var(--side-2); }
 .menu a.item[aria-current="page"] { background: var(--side-active); color: #fff; }
 .menu ul { list-style: none; margin: 0; padding: 0; }

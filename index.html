@@ -33,6 +33,11 @@
           Medical<span class="chev" aria-hidden="true">▴</span>
         </button>
         <ul id="medicalList" hidden>
+          <li><a class="item lvl1" href="#misafirler">Misafirler</a></li>
+          <li><a class="item lvl1" href="#rezervasyon-takvimi">Rezervasyon Takvimi</a></li>
+          <li><a class="item lvl1" href="#rezervasyon-listesi">Rezervasyon Listesi</a></li>
+          <li><a class="item lvl1" href="#urun-satislari">Ürün Satışları</a></li>
+          <li><a class="item lvl1" href="#lab-test-formlari">Lab Test Formları</a></li>
           <li>
             <button type="button" class="grp-btn sub" id="tanimlarBtn" aria-expanded="false" aria-controls="tanimlarList">Tanımlar<span class="chev" aria-hidden="true">▴</span></button>
             <ul id="tanimlarList" hidden>
@@ -63,6 +68,15 @@
 <script>
 (function () {
   'use strict';
+  // Medical altındaki ekranlar
+  var MAIN = {
+    'misafirler': 'Misafirler',
+    'rezervasyon-takvimi': 'Rezervasyon Takvimi',
+    'rezervasyon-listesi': 'Rezervasyon Listesi',
+    'urun-satislari': 'Ürün Satışları',
+    'lab-test-formlari': 'Lab Test Formları'
+  };
+  // Tanımlar altındaki ekranlar
   var PAGES = {
     'hizmet-gruplari': 'Hizmet Grupları',
     'hizmetler': 'Hizmetler',
@@ -94,10 +108,11 @@
     [].forEach.call(document.querySelectorAll('.menu a.item'), function (a) {
       if (a.getAttribute('href') === '#' + key) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
-    if (PAGES[key]) {
+    var title = MAIN[key] || PAGES[key];
+    if (title) {
       toggle('medicalBtn', 'medicalList', true);
-      toggle('tanimlarBtn', 'tanimlarList', true);
-      content.innerHTML = '<h1 class="page-title">' + PAGES[key] + '</h1><div class="empty">Bu ekranın alanları henüz belirlenmedi.</div>';
+      if (PAGES[key]) toggle('tanimlarBtn', 'tanimlarList', true);
+      content.innerHTML = '<h1 class="page-title">' + title + '</h1><div class="empty">Bu ekranın alanları henüz belirlenmedi.</div>';
     } else {
       content.innerHTML = '';
     }

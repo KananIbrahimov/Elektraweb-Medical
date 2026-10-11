@@ -19,81 +19,69 @@
       </button>
       <span class="logo">ElektraWeb<sup>Medical</sup></span>
     </div>
-    <nav class="quick" aria-label="Kısayollar">
-      <a href="#giris" class="q"><span class="qi" style="color:var(--q-purple)"><svg viewBox="0 0 24 24"><circle cx="10" cy="8" r="4"/><path d="M3 20c0-4 3-6 7-6M16 14v6M13 17h6"/></svg></span>Misafir Girişi</a>
-      <a href="#planlama" class="q"><span class="qi" style="color:var(--q-blue)"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/></svg></span>Planlama</a>
-      <a href="#takvim" class="q"><span class="qi" style="color:var(--q-green)"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h7"/></svg></span>Takvim</a>
-      <a href="#urun" class="q"><span class="qi" style="color:var(--q-orange)"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 0 1 6 0v2"/></svg></span>Ürün Satış</a>
-      <a href="#lab-sonuc" class="q"><span class="qi" style="color:var(--q-pink)"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3M7 15h10"/></svg></span>Lab</a>
-      <a href="#adisyon" class="q"><span class="qi" style="color:#1e9e8a"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h4"/></svg></span>Adisyon</a>
-      <a href="#rapor" class="q"><span class="qi" style="color:#2e9d4f"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 17v-4M12 17V8M16 17v-6"/></svg></span>Raporlar</a>
-    </nav>
     <div class="tb-right">
       <span class="tb-btn lang"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="2"/></svg>TR</span>
       <span class="tb-btn navy" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><rect x="5" y="11" width="14" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg></span>
     </div>
   </header>
 
-  <!-- SOL MENÜ: yalnızca Medical başlığı -->
   <aside class="sidebar" id="sidebar" aria-label="Medical menüsü">
-    <div class="menu-head"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z" fill="currentColor"/></svg>Medical<span class="chev" aria-hidden="true">⌃</span></div>
     <ul class="menu">
-      <li><a href="#giris">Misafir Girişi<span class="star">☆</span></a></li>
-      <li><a href="#planlama">Rezervasyon Planlama<span class="star">☆</span></a></li>
-      <li><a href="#liste">Rezervasyon Listesi<span class="star">☆</span></a></li>
-      <li><a href="#urun">Ürün Satışları<span class="star">☆</span></a></li>
-      <li><a href="#lab-sonuc">Lab Sonuçları<span class="star">☆</span></a></li>
-      <li><a href="#adisyon">Adisyon Listesi<span class="star">☆</span></a></li>
-      <li><a href="#paket">Paket Satışları<span class="star">☆</span></a></li>
-      <li><a href="#rapor">Raporlar<span class="star">☆</span></a></li>
       <li>
-        <button type="button" class="grp-btn" id="defsBtn" aria-expanded="true" aria-controls="defsList">Tanımlar<span class="chev" aria-hidden="true">⌃</span></button>
-        <ul id="defsList">
-          <li class="sub-head">Hizmet</li>
-          <li><a href="#hizmet-grup">Hizmet Grupları<span class="star">☆</span></a></li>
-          <li><a href="#hizmet">Hizmet Tanımları<span class="star">☆</span></a></li>
-          <li class="sub-head">Ürün</li>
-          <li><a href="#urun-grup">Ürün Grupları<span class="star">☆</span></a></li>
-          <li><a href="#urun-tanim">Ürün Tanımları<span class="star">☆</span></a></li>
-          <li class="sub-head">Lab Test</li>
-          <li><a href="#lab-grup">Lab Test Grupları<span class="star">☆</span></a></li>
-          <li><a href="#lab-tanim">Lab Test Tanımları<span class="star">☆</span></a></li>
-          <li class="sub-head">Planlama Tanımları</li>
-          <li><a href="#paket-tanim">Paket Tanımları<span class="star">☆</span></a></li>
-          <li><a href="#mekan">Mekanlar ve Masaj Odaları<span class="star">☆</span></a></li>
-          <li><a href="#gorevli">Görevli Tanımları<span class="star">☆</span></a></li>
-          <li><a href="#shift">Shift Tanımları<span class="star">☆</span></a></li>
-          <li><a href="#hizmet-gorevli">Hizmet-Görevli Eşleştirme<span class="star">☆</span></a></li>
-          <li><a href="#hizmet-mekan">Hizmet-Mekan Eşleştirme<span class="star">☆</span></a></li>
-          <li><a href="#uye">Üye Tanımları<span class="star">☆</span></a></li>
-          <li><a href="#parametre">Planlama Parametreleri<span class="star">☆</span></a></li>
+        <button type="button" class="grp-btn" id="medicalBtn" aria-expanded="false" aria-controls="medicalList">
+          <svg class="ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z" fill="currentColor"/></svg>
+          Medical<span class="chev" aria-hidden="true">▴</span>
+        </button>
+        <ul id="medicalList" hidden>
+          <li><button type="button" class="grp-btn sub" id="tanimlarBtn">Tanımlar</button></li>
         </ul>
       </li>
     </ul>
-    <div class="side-foot">DEMO · Medical modülü v0.3<br>Tüm kayıtlar kurgusaldır</div>
+    <div class="side-foot">DEMO · Medical modülü</div>
   </aside>
   <div class="scrim" id="scrim"></div>
 
   <main class="content" id="content"></main>
 </div>
 
-<div class="modal-back" id="modalBack" hidden>
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal-head">
-      <div><h2 id="modalTitle">Tanım</h2><small id="modalSub"></small></div>
-      <div class="modal-actions">
-        <button type="button" class="ico ok" id="modalOk" aria-label="Kaydet"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 12l5 5L20 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button type="button" class="ico x" id="modalX" aria-label="Kapat"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
-      </div>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
-</div>
-<div class="toast" id="toast" role="status" hidden></div>
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var content = document.getElementById('content');
+  var medicalBtn = document.getElementById('medicalBtn');
+  var medicalList = document.getElementById('medicalList');
+  var tanimlarBtn = document.getElementById('tanimlarBtn');
 
-<script src="src/engine.js"></script>
-<script src="data/demo-data.js"></script>
-<script src="data/lab-data.js"></script>
-<script src="assets/app.js"></script>
+  function show(view) {
+    tanimlarBtn.toggleAttribute('aria-current', view === 'tanimlar');
+    if (view === 'tanimlar') {
+      tanimlarBtn.setAttribute('aria-current', 'page');
+      content.innerHTML = '<h1 class="page-title">Tanımlar</h1><div class="empty">Henüz tanım ekranı yok.</div>';
+    } else {
+      content.innerHTML = '';
+    }
+  }
+
+  medicalBtn.addEventListener('click', function () {
+    var open = medicalBtn.getAttribute('aria-expanded') === 'true';
+    medicalBtn.setAttribute('aria-expanded', String(!open));
+    medicalList.hidden = open;
+  });
+  tanimlarBtn.addEventListener('click', function () {
+    location.hash = 'tanimlar';
+    show('tanimlar');
+    app.classList.remove('menu-open');
+  });
+  document.getElementById('hamburger').addEventListener('click', function () { app.classList.toggle('menu-open'); });
+  document.getElementById('scrim').addEventListener('click', function () { app.classList.remove('menu-open'); });
+
+  if (location.hash === '#tanimlar') {
+    medicalBtn.setAttribute('aria-expanded', 'true');
+    medicalList.hidden = false;
+    show('tanimlar');
+  }
+})();
+</script>
 </body>
 </html>

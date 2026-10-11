@@ -33,7 +33,17 @@
           Medical<span class="chev" aria-hidden="true">▴</span>
         </button>
         <ul id="medicalList" hidden>
-          <li><button type="button" class="grp-btn sub" id="tanimlarBtn">Tanımlar</button></li>
+          <li>
+            <button type="button" class="grp-btn sub" id="tanimlarBtn" aria-expanded="false" aria-controls="tanimlarList">Tanımlar<span class="chev" aria-hidden="true">▴</span></button>
+            <ul id="tanimlarList" hidden>
+              <li><a class="item" href="#hizmet-gruplari">Hizmet Grupları</a></li>
+              <li><a class="item" href="#hizmetler">Hizmetler</a></li>
+              <li><a class="item" href="#urun-gruplari">Ürün Grupları</a></li>
+              <li><a class="item" href="#urunler">Ürünler</a></li>
+              <li><a class="item" href="#lab-test-gruplari">Lab Test Grupları</a></li>
+              <li><a class="item" href="#lab-testler">Lab Testler</a></li>
+            </ul>
+          </li>
         </ul>
       </li>
     </ul>
@@ -47,40 +57,44 @@
 <script>
 (function () {
   'use strict';
+  var PAGES = {
+    'hizmet-gruplari': 'Hizmet Grupları',
+    'hizmetler': 'Hizmetler',
+    'urun-gruplari': 'Ürün Grupları',
+    'urunler': 'Ürünler',
+    'lab-test-gruplari': 'Lab Test Grupları',
+    'lab-testler': 'Lab Testler'
+  };
   var app = document.getElementById('app');
   var content = document.getElementById('content');
-  var medicalBtn = document.getElementById('medicalBtn');
-  var medicalList = document.getElementById('medicalList');
-  var tanimlarBtn = document.getElementById('tanimlarBtn');
 
-  function show(view) {
-    tanimlarBtn.toggleAttribute('aria-current', view === 'tanimlar');
-    if (view === 'tanimlar') {
-      tanimlarBtn.setAttribute('aria-current', 'page');
-      content.innerHTML = '<h1 class="page-title">Tanımlar</h1><div class="empty">Henüz tanım ekranı yok.</div>';
+  function toggle(btnId, listId, force) {
+    var btn = document.getElementById(btnId), list = document.getElementById(listId);
+    var open = force != null ? force : btn.getAttribute('aria-expanded') !== 'true';
+    btn.setAttribute('aria-expanded', String(open));
+    list.hidden = !open;
+  }
+  document.getElementById('medicalBtn').addEventListener('click', function () { toggle('medicalBtn', 'medicalList'); });
+  document.getElementById('tanimlarBtn').addEventListener('click', function () { toggle('tanimlarBtn', 'tanimlarList'); });
+
+  function render() {
+    var key = location.hash.replace('#', '');
+    [].forEach.call(document.querySelectorAll('.menu a.item'), function (a) {
+      if (a.getAttribute('href') === '#' + key) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+    if (PAGES[key]) {
+      toggle('medicalBtn', 'medicalList', true);
+      toggle('tanimlarBtn', 'tanimlarList', true);
+      content.innerHTML = '<h1 class="page-title">' + PAGES[key] + '</h1><div class="empty">Bu ekranın alanları henüz belirlenmedi.</div>';
     } else {
       content.innerHTML = '';
     }
-  }
-
-  medicalBtn.addEventListener('click', function () {
-    var open = medicalBtn.getAttribute('aria-expanded') === 'true';
-    medicalBtn.setAttribute('aria-expanded', String(!open));
-    medicalList.hidden = open;
-  });
-  tanimlarBtn.addEventListener('click', function () {
-    location.hash = 'tanimlar';
-    show('tanimlar');
     app.classList.remove('menu-open');
-  });
+  }
+  window.addEventListener('hashchange', render);
   document.getElementById('hamburger').addEventListener('click', function () { app.classList.toggle('menu-open'); });
   document.getElementById('scrim').addEventListener('click', function () { app.classList.remove('menu-open'); });
-
-  if (location.hash === '#tanimlar') {
-    medicalBtn.setAttribute('aria-expanded', 'true');
-    medicalList.hidden = false;
-    show('tanimlar');
-  }
+  render();
 })();
 </script>
 </body>
